@@ -293,6 +293,8 @@ function genChunk(world, cx, cy) {
       kind: 'corpse', v: (rng() * 2) | 0, read: false,
       scare: !turning && rng() < 0.3, faceShown: false, twitchT: 0,
       turning,
+      begging: turning && rng() < 0.3, // 반쯤 사람인 채 애원하는 변이 시신 (드묾)
+      ended: false,
     }));
   }
   // 마네킹 (L2 전용 — 안 볼 때 이동)
@@ -310,6 +312,11 @@ function genChunk(world, cx, cy) {
     const toys = ['teddy', 'ball', 'blocks'];
     const n = 2 + ((rng() * 3) | 0);
     for (let i = 0; i < n; i++) props.push(placeProp({ kind: toys[(rng() * toys.length) | 0] }));
+    // 크레용 벽화 — 아이들이 그린 그림. panel로 장면을 나눠 흩어 둔다(조각으로 최후를 조립).
+    if (rng() < 0.34) {
+      const leo = rng() < 0.18; // 드물게 '레오의 그림'(형이 까맣게 지워진)
+      props.push(placeProp({ kind: 'mural', panel: leo ? 4 : (rng() * 4) | 0, leo, read: false }));
+    }
   }
   const writeP = z === 1 ? 0.24 : 0.16;
   if (rng() < writeP) {

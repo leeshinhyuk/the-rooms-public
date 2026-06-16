@@ -26,6 +26,40 @@ BK.ZONES = [
   },
 ];
 
+// ---------- 캐릭터 커스터마이징 팔레트 (헤어 / 의상) ----------
+BK.PLAYER_SKIN = '#d8a87c';
+BK.PLAYER_PANTS = '#262d36';
+BK.PLAYER_SHOE = '#14171c';
+BK.PLAYER_HAIR = [
+  { name: '검은 머리', hair: '#241f1a' },
+  { name: '갈색 머리', hair: '#5a3a22' },
+  { name: '금발', hair: '#c8a352' },
+  { name: '적갈 머리', hair: '#7e2c1d' },
+  { name: '탈색 은발', hair: '#b8bcc4' },
+  { name: '청록 머리', hair: '#2f5a5a' },
+  { name: '회색 비니', hair: '#3a3f47', cap: '#5a616b', capL: '#737b86', capD: '#2c3138' },
+  { name: '빨강 비니', hair: '#3a3f47', cap: '#8a3326', capL: '#a84436', capD: '#5e2017' },
+];
+BK.PLAYER_OUTFIT = [
+  { name: '청록 후디', hood: '#3c5a68', hoodD: '#2f4855', hoodL: '#4b7184' },
+  { name: '잿빛 후디', hood: '#4a4f57', hoodD: '#34383f', hoodL: '#5e646d' },
+  { name: '핏빛 후디', hood: '#6e2f2f', hoodD: '#532222', hoodL: '#8a3f3f' },
+  { name: '보라 후디', hood: '#4a3a66', hoodD: '#382c4e', hoodL: '#5e4b80' },
+  { name: '군녹 야상', hood: '#46523a', hoodD: '#343d2c', hoodL: '#586a48' },
+  { name: '먹색 후디', hood: '#22252c', hoodD: '#15171c', hoodL: '#33373f' },
+  { name: '노란 우비', hood: '#b69a3a', hoodD: '#8a7426', hoodL: '#d8bb4e' },
+];
+BK.makePlayerPal = function (hairIdx, outfitIdx) {
+  const h = BK.PLAYER_HAIR[hairIdx] || BK.PLAYER_HAIR[0];
+  const o = BK.PLAYER_OUTFIT[outfitIdx] || BK.PLAYER_OUTFIT[0];
+  return {
+    skin: BK.PLAYER_SKIN, pants: BK.PLAYER_PANTS, shoe: BK.PLAYER_SHOE,
+    hair: h.hair, cap: h.cap || null, capL: h.capL, capD: h.capD,
+    hood: o.hood, hoodD: o.hoodD, hoodL: o.hoodL,
+  };
+};
+BK.PLAYER_DEFAULT = BK.makePlayerPal(0, 0);
+
 BK.buildAssets = function () {
   const T = BK.TILE;
   const A = BK.assets = {};
@@ -254,6 +288,43 @@ BK.buildAssets = function () {
     g.fillStyle = 'rgba(110,22,18,0.5)';
     g.fillRect(2 + ((rng() * 9) | 0), 8, 1, 2); // 흘러내린 핏자국
     A.writings.push(c);
+  }
+
+  // ---------- 크레용 벽화 (놀이방 — 아이들이 그린 그림) ----------
+  function crayonFigure(g, x, y, col, sc, raincoat) {
+    g.strokeStyle = col; g.lineWidth = 1.1;
+    g.beginPath(); g.arc(x, y, 2 * sc, 0, Math.PI * 2); g.stroke();          // 머리
+    g.beginPath();
+    g.moveTo(x, y + 2 * sc); g.lineTo(x, y + 7 * sc);                        // 몸통
+    g.moveTo(x - 3 * sc, y + 4 * sc); g.lineTo(x + 3 * sc, y + 4 * sc);      // 팔
+    g.moveTo(x, y + 7 * sc); g.lineTo(x - 2.5 * sc, y + 11 * sc);            // 다리
+    g.moveTo(x, y + 7 * sc); g.lineTo(x + 2.5 * sc, y + 11 * sc);
+    g.stroke();
+    g.beginPath(); g.arc(x, y + 0.3 * sc, 1.6 * sc, 0.12 * Math.PI, 0.88 * Math.PI); g.stroke(); // 입(얼굴보다 크게 — 으스스)
+    if (raincoat) { g.fillStyle = '#e8c83a'; g.fillRect(x - 2.2 * sc, y + 2 * sc, 4.4 * sc, 4.2 * sc); }
+  }
+  A.murals = [];
+  const CRAYON = ['#c0392b', '#2a6fb0', '#3a8a3a', '#c08a20', '#8a4ab0'];
+  for (let v = 0; v < 4; v++) {
+    const c = mk(24, 20), g = c.getContext('2d');
+    const rng = BK.mulberry32(2200 + v);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    if (v < 3) {
+      g.strokeStyle = '#d8b020'; g.lineWidth = 1;                            // 해
+      g.beginPath(); g.arc(20, 4, 2.3, 0, Math.PI * 2); g.stroke();
+      for (let r = 0; r < 6; r++) { const a = r / 6 * Math.PI * 2; g.beginPath(); g.moveTo(20 + Math.cos(a) * 3.4, 4 + Math.sin(a) * 3.4); g.lineTo(20 + Math.cos(a) * 5, 4 + Math.sin(a) * 5); g.stroke(); }
+      const n = 2 + v;
+      for (let i = 0; i < n; i++) crayonFigure(g, 4 + i * 5.2 + rng() * 1.2, 5 + rng() * 1.2, CRAYON[(rng() * CRAYON.length) | 0], 0.82, false);
+      g.strokeStyle = '#6a5030'; g.lineWidth = 1; g.beginPath(); g.moveTo(1, 18); g.lineTo(23, 18.5); g.stroke(); // 바닥
+    } else {
+      // 레오의 그림 — 손잡은 형과 동생, 형 쪽이 까맣게 지워짐
+      crayonFigure(g, 8, 5, '#c08a20', 1.0, false);                          // 형(큰)
+      crayonFigure(g, 16, 7, '#c0392b', 0.75, true);                         // 동생(작은·노란 우비)
+      g.strokeStyle = '#3a8a3a'; g.lineWidth = 1; g.beginPath(); g.moveTo(11, 9.5); g.lineTo(13.5, 11); g.stroke(); // 손잡음
+      g.strokeStyle = 'rgba(16,14,18,0.92)'; g.lineWidth = 1.6;              // 형 쪽을 까맣게 마구 지움
+      for (let s = 0; s < 6; s++) { g.beginPath(); g.moveTo(3 + rng() * 4, 2 + rng() * 3); g.lineTo(12 - rng() * 4, 15 - rng() * 3); g.stroke(); }
+    }
+    A.murals.push(c);
   }
 
   // ---------- 형광등 ----------
@@ -614,15 +685,23 @@ BK.buildAssets = function () {
   })();
 
   // ---------- 시체 (먼저 떨어진 자) — face=true면 후드에서 얼굴이 솟는다 ----------
-  function paintCorpse(v, face) {
+  // 색을 어둡게 (시신 변종에 살짝 더 칙칙한 색)
+  function shade(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.round(((n >> 16) & 255) * f), gg = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+    return '#' + ((1 << 24) + (r << 16) + (gg << 8) + b).toString(16).slice(1);
+  }
+  // 시신은 '먼저 떨어진 나' — 플레이어가 고른 의상 색을 입는다 (루프 공포)
+  function paintCorpse(v, face, pal) {
+    pal = pal || BK.PLAYER_DEFAULT;
     const c = mk(20, 14), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.32)';
     g.beginPath(); g.ellipse(10, 11, 9, 3, 0, 0, Math.PI * 2); g.fill();
     // 말라붙은 핏자국
     g.fillStyle = v ? 'rgba(80,18,16,0.5)' : 'rgba(60,40,18,0.45)';
     g.beginPath(); g.ellipse(9, 11, 8, 2.4, 0, 0, Math.PI * 2); g.fill();
-    // 후드 입은 몸 (옆으로 누움)
-    const HOOD = v ? '#3a4a40' : '#42525e', HOODD = v ? '#2c3a32' : '#33414b';
+    // 후드 입은 몸 (옆으로 누움) — 의상 팔레트, v=1은 더 칙칙하게
+    const HOOD = v ? pal.hoodD : pal.hood, HOODD = v ? shade(pal.hoodD, 0.72) : pal.hoodD;
     g.fillStyle = HOOD; g.fillRect(5, 6, 11, 5);
     g.fillStyle = HOODD; g.fillRect(5, 9, 11, 2);
     g.fillStyle = HOOD; g.fillRect(14, 7, 4, 4);       // 머리(후드)
@@ -639,19 +718,18 @@ BK.buildAssets = function () {
     // 뻗은 팔/다리
     g.fillStyle = HOODD; g.fillRect(2, 8, 4, 2);
     g.fillStyle = '#b8966c'; g.fillRect(1, 8, 1, 2);   // 손
-    g.fillStyle = '#262d36'; g.fillRect(6, 11, 6, 2);  // 바지
+    g.fillStyle = pal.pants; g.fillRect(6, 11, 6, 2);  // 바지
     return c;
   }
-  A.corpse = [paintCorpse(0, false), paintCorpse(1, false)];
-  A.corpseFace = [paintCorpse(0, true), paintCorpse(1, true)];
 
   // ---------- 변해가는 시신 — 사람이 잿빛 '꺼진 것'으로 굳어가는 중간 형태 ----------
-  function paintCorpseTurning(v) {
+  function paintCorpseTurning(v, pal) {
+    pal = pal || BK.PLAYER_DEFAULT;
     const c = mk(20, 14), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.32)';
     g.beginPath(); g.ellipse(10, 11, 9, 3, 0, 0, Math.PI * 2); g.fill();
-    // 후드 입은 몸 (사람 쪽 절반)
-    const HOOD = v ? '#3a4a40' : '#42525e', HOODD = v ? '#2c3a32' : '#33414b';
+    // 후드 입은 몸 (사람 쪽 절반) — 의상 팔레트
+    const HOOD = v ? pal.hoodD : pal.hood, HOODD = v ? shade(pal.hoodD, 0.72) : pal.hoodD;
     g.fillStyle = HOOD; g.fillRect(5, 6, 11, 5);
     g.fillStyle = HOODD; g.fillRect(5, 9, 11, 2);
     // 잿빛 돌이 몸을 잠식한다 (왼쪽부터 굳음)
@@ -669,20 +747,28 @@ BK.buildAssets = function () {
     g.fillStyle = 'rgba(220,224,210,0.8)'; g.fillRect(15, 8, 1, 1); g.fillRect(17, 8, 1, 1); // 흐릿한 눈빛
     g.fillStyle = CRACK; g.fillRect(16, 7, 1, 4);     // 얼굴 균열
     // 바지(아직 사람)
-    g.fillStyle = '#262d36'; g.fillRect(6, 11, 6, 2);
+    g.fillStyle = pal.pants; g.fillRect(6, 11, 6, 2);
     return c;
   }
-  A.corpseTurn = [paintCorpseTurning(0), paintCorpseTurning(1)];
+  // 시신 스프라이트 묶음 — 선택한 의상 팔레트로 (재)생성
+  BK.buildCorpses = function (pal) {
+    pal = pal || BK.PLAYER_DEFAULT;
+    A.corpse = [paintCorpse(0, false, pal), paintCorpse(1, false, pal)];
+    A.corpseFace = [paintCorpse(0, true, pal), paintCorpse(1, true, pal)];
+    A.corpseTurn = [paintCorpseTurning(0, pal), paintCorpseTurning(1, pal)];
+  };
 
   // ---------- 플레이어 (4방향 × 4프레임) ----------
-  function paintPlayer(dir, frame) {
+  function paintPlayer(dir, frame, pal) {
+    pal = pal || BK.PLAYER_DEFAULT;
     const c = mk(16, 18), g = c.getContext('2d');
     const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
     const bob = (frame === 1 || frame === 3) ? 1 : 0;
     const lp = [0, 1, 0, -1][frame];
-    const PANTS = '#262d36', SHOE = '#14171c', HOOD = '#3c5a68',
-      HOODD = '#2f4855', HOODL = '#4b7184', SKIN = '#d8a87c',
-      HAIR = '#241f1a', EYE = '#15151c';
+    const PANTS = pal.pants, SHOE = pal.shoe, HOOD = pal.hood,
+      HOODD = pal.hoodD, HOODL = pal.hoodL, SKIN = pal.skin,
+      HAIR = pal.hair, EYE = '#15151c';
+    const cap = pal.cap; // 비니/모자 — 있으면 머리카락 위에 덮어 그린다
     if (dir === 0 || dir === 3) {
       R(5, 12 + lp, 2, 4, PANTS); R(5, 15 + lp, 2, 1, SHOE);
       R(9, 12 - lp, 2, 4, PANTS); R(9, 15 - lp, 2, 1, SHOE);
@@ -712,6 +798,13 @@ BK.buildAssets = function () {
       R(9, bob + 3, 3, 4, SKIN);
       R(10, bob + 4, 1, 1, EYE);
     }
+    // 비니/모자 — 머리카락 위에 덮어 그린다 (방향별 머리 영역에 맞춤)
+    if (cap) {
+      const capD = pal.capD || cap, capL = pal.capL || cap;
+      if (dir === 0) { R(4, bob, 8, 3, cap); R(4, bob, 8, 1, capL); R(4, bob + 2, 8, 1, capD); }
+      else if (dir === 3) { R(4, bob, 8, 5, cap); R(4, bob, 8, 1, capL); R(4, bob + 4, 8, 1, capD); }
+      else { R(4, bob, 8, 4, cap); R(4, bob, 8, 1, capL); R(4, bob + 3, 8, 1, capD); }
+    }
     return c;
   }
   function mirror(src) {
@@ -720,24 +813,35 @@ BK.buildAssets = function () {
     g.drawImage(src, 0, 0);
     return c;
   }
-  A.player = [[], [], [], []];
-  for (let f = 0; f < 4; f++) {
-    A.player[0].push(paintPlayer(0, f));
-    A.player[3].push(paintPlayer(3, f));
-    const right = paintPlayer(2, f);
-    A.player[2].push(right);
-    A.player[1].push(mirror(right));
-  }
-  // 도플갱어: 플레이어 실루엣 (검게)
-  A.playerDark = (() => {
-    const src = A.player[0][0];
-    const c = mk(src.width, src.height), g = c.getContext('2d');
-    g.drawImage(src, 0, 0);
-    g.globalCompositeOperation = 'source-in';
-    g.fillStyle = '#101016';
-    g.fillRect(0, 0, c.width, c.height);
-    return c;
-  })();
+  // 선택한 팔레트로 플레이어 스프라이트(4방향×4프레임) + 도플갱어 실루엣을 (재)생성
+  BK.buildPlayer = function (pal) {
+    pal = pal || BK.PLAYER_DEFAULT;
+    A.player = [[], [], [], []];
+    for (let f = 0; f < 4; f++) {
+      A.player[0].push(paintPlayer(0, f, pal));
+      A.player[3].push(paintPlayer(3, f, pal));
+      const right = paintPlayer(2, f, pal);
+      A.player[2].push(right);
+      A.player[1].push(mirror(right));
+    }
+    // 도플갱어: 플레이어 실루엣 (검게)
+    A.playerDark = (() => {
+      const src = A.player[0][0];
+      const c = mk(src.width, src.height), g = c.getContext('2d');
+      g.drawImage(src, 0, 0);
+      g.globalCompositeOperation = 'source-in';
+      g.fillStyle = '#101016';
+      g.fillRect(0, 0, c.width, c.height);
+      return c;
+    })();
+    A._playerPal = pal;
+    BK.buildCorpses(pal); // 시신도 같은 의상으로 — '먼저 떨어진 나'
+  };
+  // 헤어/의상 인덱스로 룩 적용
+  BK.setPlayerLook = function (hairIdx, outfitIdx) {
+    BK.buildPlayer(BK.makePlayerPal(hairIdx, outfitIdx));
+  };
+  BK.buildPlayer(BK.PLAYER_DEFAULT);
 
   // ---------- 아이 영혼 (해방 대상) ----------
   function paintSpirit(brother) {
