@@ -147,6 +147,9 @@ BK.Monster = class {
     this.weakT = 0;
     this.dirVec = { x: 1, y: 0 };
     this.frozen = false;            // 꺼진 것: 빛에 굳음
+    this.petrifyT = 0;              // 꺼진 것: 강한 빛 노출 누적 (영구 석화까지)
+    this.petrified = false;         // 꺼진 것: 영구 석화됨(서브 루트 — 위협 제거)
+    this.crashes = 0;               // 광대: 벽 충돌 누적 (소진까지)
     this.shadeAggro = false;        // 꺼진 것: 근접 추격 여부(BGM/조명)
     this._litLevel = 0;             // 렌더가 채워주는 현재 광량
     this._onScreen = false;
@@ -224,7 +227,7 @@ BK.Monster = class {
 
     // 접촉 (숨어 있으면 직접 잡히지 않음 — 발각은 game에서 별도 처리)
     // 꺼진 것은 굳어 있을 땐 잡지 못한다 (빛이 꺼지는 순간 잡힌다)
-    if (d < spec.hit && game.state === 'play' && this.state !== 'rest' && !this.frozen && !player.hidden) {
+    if (d < spec.hit && game.state === 'play' && this.state !== 'rest' && this.state !== 'down' && !this.frozen && !player.hidden) {
       if (!spec.catchStun) game.catchPlayer(this); // 우는 아이는 비명만(updateChild)
     }
   }
@@ -353,6 +356,7 @@ BK.Monster = class {
       const m = Math.hypot(this.dirVec.x, this.dirVec.y) || 1;
       this.dirVec.x /= m; this.dirVec.y /= m;
       BK.audio.clownHorn();
+      BK.audio.riser(spec.chargeWindup, 0.05); // 경직 동안 차오르는 긴장
       if (this.spotCD <= 0) { game.onSpotted(this); this.spotCD = 5; }
     }
 
@@ -377,20 +381,27 @@ BK.Monster = class {
         const m = Math.hypot(aim.x, aim.y) || 1;
         this.dirVec.x = BK.lerp(this.dirVec.x, aim.x / m, 0.06);
         this.dirVec.y = BK.lerp(this.dirVec.y, aim.y / m, 0.06);
-        if (this.timer <= 0) { this.state = 'charge'; this.timer = spec.chargeDur; }
+        if (this.timer <= 0) {
+          this.state = 'charge'; this.timer = spec.chargeDur;
+          BK.audio.duck(0.1, 0.04, 0.5); // 폭주가 터지는 순간의 정적
+          BK.fx.addShake(2.5);
+        }
         break;
       }
       case 'charge': {
         this.timer -= dt;
         const step = spec.chargeSpeed * dt;
         if (!this.moveStraight(world, this.dirVec.x * step, this.dirVec.y * step)) {
-          // 벽에 박으면 잠깐 멈췄다 휴식
-          this.state = 'rest'; this.timer = spec.chargeRest; BK.audio.thud();
-          BK.fx.addShake(2);
+          // 벽에 박으면 잠깐 멈췄다 휴식. 옆으로 피해 헛돌진을 유도하면 점점 지친다.
+          BK.audio.thud(); BK.fx.addShake(2);
+          this.crashes++;
+          if (this.crashes >= 3) { this.state = 'down'; this.timer = 0; this.path = []; } // 서브 루트: 소진
+          else { this.state = 'rest'; this.timer = spec.chargeRest; }
         }
-        if (this.timer <= 0) { this.state = 'rest'; this.timer = spec.chargeRest; }
+        if (this.state === 'charge' && this.timer <= 0) { this.state = 'rest'; this.timer = spec.chargeRest; }
         break;
       }
+      case 'down': break; // 소진 — 주저앉아 더는 일어나지 않는다
       case 'rest': {
         this.timer -= dt;
         if (this.timer <= 0) {
@@ -427,6 +438,8 @@ BK.Monster = class {
   // ===== 꺼진 것: 어둠/화면 밖에서만 전진. 빛에 닿으면 굳는다 =====
   updateShade(dt, world, player, game, d, pt, me) {
     const spec = this.spec;
+    // 서브 루트: 영구 석화되면 영원히 멈춘 석상 (위협 제거)
+    if (this.petrified) { this.frozen = true; this.shadeAggro = false; this.path = []; return; }
     this.state = 'hunt'; // 항상 집요하게 노린다 (시야/소리 무관)
     // 렌더가 채워준 광량으로 '굳음' 판정: 화면 안 + 충분히 밝으면 굳는다
     const wasFrozen = this.frozen;
@@ -438,8 +451,18 @@ BK.Monster = class {
       }
       this.path = [];
       this.shadeAggro = false;
+      // 강한 빛에 충분히 오래 노출되면 영구 석화 (서브 루트). 발전기를 켜면 훨씬 쉬워진다.
+      if (this._litLevel > 0.5) {
+        this.petrifyT += dt;
+        if (this.petrifyT > 3.5) {
+          this.petrified = true;
+          BK.audio.shadeFreeze(BK.clamp((this.x - player.x) / 240, -1, 1));
+          BK.fx.addShake(2);
+        }
+      }
       return;
     }
+    this.petrifyT = Math.max(0, this.petrifyT - dt * 1.5); // 어둠으로 들어가면 굳기 풀림
     // 어둠/화면 밖 → 플레이어에게로 전진
     if (this.repathT <= 0) {
       this.path = BK.findPath(world, me.x, me.y, pt.x, pt.y) || [];
@@ -498,9 +521,11 @@ BK.Monster = class {
     const spec = this.spec;
     const aggr = this.aggressive;
     const charging = this.state === 'charge';
+    const down = this.state === 'down'; // 광대: 소진해 주저앉음
     // 꺼진 것: 굳어 있으면 미동도 없는 석상, 어둠에서 움직이면 살짝 떤다
     let jit = charging ? 2.2 : (aggr ? 1.4 : 0.5);
     if (this.kind === 'shade') jit = this.frozen ? 0.15 : 1.2;
+    if (down) jit = 0;
     const jx = (Math.random() - 0.5) * 2 * jit;
     const jy = (Math.random() - 0.5) * 2 * jit;
     const sx = Math.round(this.x - cam.x + jx), sy = Math.round(this.y - cam.y + jy);
@@ -513,9 +538,10 @@ BK.Monster = class {
     // 본체 (꺼진 것: 굳음=석상 프레임0~1, 움직임=프레임2~3)
     let base = aggr ? 2 : 0;
     if (this.kind === 'shade') base = this.frozen ? 0 : 2;
+    if (down) base = 0;
     const spr = BK.assets.mon[this.kind][base + this.frame];
-    g.globalAlpha = lightAlpha * 0.96;
-    g.drawImage(spr, sx - (spec.spriteW >> 1), sy + spec.dy);
+    g.globalAlpha = lightAlpha * (down ? 0.7 : 0.96);
+    g.drawImage(spr, sx - (spec.spriteW >> 1), sy + spec.dy + (down ? 11 : 0));
     g.globalAlpha = 1;
   }
 };

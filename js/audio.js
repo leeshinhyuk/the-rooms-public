@@ -5,6 +5,7 @@ BK.audio = (() => {
   let ctx = null, master = null, noiseBuf = null;
   let started = false, muted = false;
   let dreadG = null, exitG = null, crisisG = null;
+  let ambBus = null;            // 앰비언스/음악 베드 전용 버스 — 급정적(duck)에 쓰인다
   let tension = 0;
   let curZone = -1;
 
@@ -29,9 +30,14 @@ BK.audio = (() => {
     master.connect(ctx.destination);
     noiseBuf = makeNoiseBuf();
 
+    // 앰비언스/음악 버스 — 모든 지속 레이어가 여기로 모인다. duck()으로 순간 정적을 만든다.
+    // (일회성 SFX는 master로 직결되어 정적 속에서도 또렷이 터진다)
+    ambBus = ctx.createGain(); ambBus.gain.value = 1;
+    ambBus.connect(master);
+
     // ===== 레이어 0: 형광등 험 =====
     humG = ctx.createGain(); humG.gain.value = 0;
-    humG.connect(master);
+    humG.connect(ambBus);
     const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 120;
     const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 240; o2.detune.value = 5;
     const g2 = ctx.createGain(); g2.gain.value = 0.35;
@@ -46,7 +52,7 @@ BK.audio = (() => {
     // ===== 레이어 1: 기계 드론 =====
     machG = ctx.createGain(); machG.gain.value = 0;
     const machFilter = ctx.createBiquadFilter(); machFilter.type = 'lowpass'; machFilter.frequency.value = 130;
-    machFilter.connect(machG); machG.connect(master);
+    machFilter.connect(machG); machG.connect(ambBus);
     const m1 = ctx.createOscillator(); m1.type = 'sawtooth'; m1.frequency.value = 52;
     const m2 = ctx.createOscillator(); m2.type = 'sawtooth'; m2.frequency.value = 52.7;
     const m3 = ctx.createOscillator(); m3.type = 'sine'; m3.frequency.value = 26;
@@ -64,7 +70,7 @@ BK.audio = (() => {
     boxG = ctx.createGain(); boxG.gain.value = 0;
     const boxHp = ctx.createBiquadFilter();
     boxHp.type = 'highpass'; boxHp.frequency.value = 300;
-    boxHp.connect(boxG); boxG.connect(master);
+    boxHp.connect(boxG); boxG.connect(ambBus);
     mb.bus = boxHp;
 
     // ===== 공포 드론 (괴물 근접) =====
@@ -74,19 +80,19 @@ BK.audio = (() => {
     dreadG = ctx.createGain(); dreadG.gain.value = 0;
     const dlp = ctx.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 150;
     d1.connect(dreadG); d2.connect(d2g); d2g.connect(dreadG);
-    dreadG.connect(dlp); dlp.connect(master);
+    dreadG.connect(dlp); dlp.connect(ambBus);
     d1.start(); d2.start();
 
     // ===== 포털 정적 =====
     const ex = ctx.createBufferSource(); ex.buffer = noiseBuf; ex.loop = true;
     const exf = ctx.createBiquadFilter(); exf.type = 'bandpass'; exf.frequency.value = 650; exf.Q.value = 0.6;
     exitG = ctx.createGain(); exitG.gain.value = 0;
-    ex.connect(exf); exf.connect(exitG); exitG.connect(master);
+    ex.connect(exf); exf.connect(exitG); exitG.connect(ambBus);
     ex.start();
 
     // ===== 위기 레이어: 이명(고음) + 저음 럼블 =====
     crisisG = ctx.createGain(); crisisG.gain.value = 0;
-    crisisG.connect(master);
+    crisisG.connect(ambBus);
     const tin = ctx.createOscillator(); tin.type = 'sine'; tin.frequency.value = 8200;
     const tinLfo = ctx.createOscillator(); tinLfo.type = 'sine'; tinLfo.frequency.value = 0.27;
     const tinLfoG = ctx.createGain(); tinLfoG.gain.value = 260;
@@ -268,6 +274,58 @@ BK.audio = (() => {
     flatline() {
       playTone({ freq: 1000, dur: 1.4, gain: 0.06, type: 'sine' });
       playTone({ freq: 1000, dur: 1.4, gain: 0.04, type: 'sine', detune: 4 });
+    },
+    // 순간 정적(duck) — 모든 앰비언스/음악을 확 죽였다 되살린다.
+    // 점프스케어/비명 직전에 깔면, 정적 뒤에 터지는 일회성 SFX가 훨씬 세게 들린다(공포의 공백).
+    duck(depth, hold, recover) {
+      if (!ctx || !ambBus) return;
+      const t = now();
+      const d = depth == null ? 0.1 : depth;
+      const h = hold == null ? 0.1 : hold;
+      const r = recover == null ? 0.6 : recover;
+      ambBus.gain.cancelScheduledValues(t);
+      ambBus.gain.setValueAtTime(ambBus.gain.value, t);
+      ambBus.gain.linearRampToValueAtTime(d, t + 0.04);
+      ambBus.gain.setValueAtTime(d, t + 0.04 + h);
+      ambBus.gain.linearRampToValueAtTime(1, t + 0.04 + h + r);
+    },
+    // 상승 라이저 — 돌진/조명 소멸/스케어 직전에 긴장을 끌어올리는 스윕
+    riser(dur, gain) {
+      const D = dur == null ? 0.9 : dur;
+      const G = gain == null ? 0.05 : gain;
+      playTone({ type: 'sawtooth', freq: 70, endFreq: 380, dur: D, gain: G });
+      playTone({ type: 'sine', freq: 120, endFreq: 700, dur: D, gain: G * 0.5 });
+      playNoise({ dur: D, gain: G * 0.5, type: 'highpass', freq: 1000 });
+    },
+    // 패닉 호흡 — 정신력이 낮거나 코앞에 위협이 있을 때 거칠어지는 들숨/날숨
+    panicBreath(intensity) {
+      const s = BK.clamp(intensity == null ? 0.5 : intensity, 0, 1);
+      const rate = 1 + s; // 무서울수록 가빠진다
+      // 들숨(떨리는 노이즈 상승)
+      playNoise({ dur: 0.26, gain: 0.018 + 0.05 * s, type: 'bandpass', freq: 620 + s * 520, q: 1.3 });
+      // 날숨
+      playNoise({ dur: 0.34, gain: 0.016 + 0.04 * s, type: 'bandpass', freq: 460, q: 1.6, when: 0.4 / rate });
+      if (s > 0.55) playTone({ freq: 132, endFreq: 88, dur: 0.28, gain: 0.018 * s, type: 'sine', when: 0.4 / rate });
+    },
+    // 돌이 깨지는 둔탁한 크랙 — 동생 영혼을 부술 때(돌처럼 갈라진다)
+    stoneCrack(pan) {
+      playNoise({ dur: 0.05, gain: 0.22, type: 'bandpass', freq: 2200, q: 3, pan });
+      playTone({ freq: 190, endFreq: 60, dur: 0.18, gain: 0.18, type: 'square', pan });
+      for (let i = 0; i < 6; i++) {
+        playNoise({ dur: 0.04, gain: 0.06, type: 'bandpass', freq: 900 + Math.random() * 1700, q: 5, when: 0.04 + Math.random() * 0.22, pan });
+      }
+      playTone({ freq: 70, endFreq: 30, dur: 0.5, gain: 0.18, pan });
+    },
+    // 영혼이 산산조각 — purify()의 정반대. 맑은 화음이 불협으로 무너지고 유리처럼 부서진다.
+    spiritShatter() {
+      if (!ctx || muted) return;
+      playTone({ freq: 1046.5, dur: 0.22, gain: 0.05, type: 'sine' });
+      playTone({ freq: 1046.5 * 0.943, dur: 0.55, gain: 0.05, type: 'sine', when: 0.14 }); // 반음 내려 불협
+      for (let i = 0; i < 16; i++) {
+        playNoise({ dur: 0.05, gain: 0.07, type: 'highpass', freq: 3000 + Math.random() * 4200, when: 0.2 + Math.random() * 0.5 });
+      }
+      playTone({ type: 'sawtooth', freq: 220, endFreq: 28, dur: 1.7, gain: 0.22, when: 0.2 });
+      playTone({ freq: 60, endFreq: 22, dur: 2.1, gain: 0.2, when: 0.25 });
     },
 
     footstep(run) {

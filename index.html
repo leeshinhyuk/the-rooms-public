@@ -109,8 +109,30 @@ button.ghost {
 .end-title { font-size: 38px; margin: 0 0 14px; letter-spacing: 4px; }
 .end-title.red { color: #c84a3a; text-shadow: 0 0 16px rgba(200, 74, 58, 0.6); animation: flicker 2.6s infinite; }
 .end-title.green { color: #b6d89a; text-shadow: 0 0 16px rgba(182, 216, 154, 0.5); }
+.end-title.shatter { color: #8c1d16; text-shadow: 0 0 18px rgba(160, 20, 14, 0.7), 0 0 40px rgba(120,10,8,0.4); animation: flicker 1.8s infinite; }
 .end-story { font-size: 15px; color: #b9ad77; line-height: 2.0; margin-bottom: 18px; }
 .end-stats { font-size: 13px; color: #8a7f4e; margin-bottom: 24px; line-height: 1.9; }
+
+/* ---- 캐릭터 커스터마이징 ---- */
+.look-box { max-width: 480px; }
+#look-prev {
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  display: block; margin: 0 auto 6px;
+  background: radial-gradient(circle at 50% 42%, rgba(60,64,40,0.5), rgba(4,4,2,0.85) 70%);
+  border: 1px solid #55502f;
+}
+.look-name { font-size: 13px; color: #c9bd86; letter-spacing: 1px; margin-bottom: 16px; min-height: 16px; }
+.look-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+.look-lab { font-size: 13px; color: #8a7f4e; letter-spacing: 3px; width: 44px; text-align: right; }
+.look-sw { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatch {
+  width: 26px; height: 26px; padding: 0; min-width: 0;
+  border: 2px solid #55502f; border-radius: 4px; cursor: pointer;
+  box-shadow: none; letter-spacing: 0; transition: transform 0.1s, border-color 0.1s;
+}
+.swatch:hover { transform: scale(1.12); animation: none; border-color: #b3a574; box-shadow: 0 0 8px rgba(216,204,138,0.4); }
+.swatch.sel { border-color: #ffe9a0; box-shadow: 0 0 10px rgba(255,233,160,0.7); transform: scale(1.12); }
+.look-box button#btn-look-go { margin-top: 18px; font-size: 16px; padding: 10px 26px; }
 
 /* ---- 인트로 컷신 ---- */
 @keyframes cardIn {
@@ -158,12 +180,12 @@ button.ghost {
   <canvas id="screen" width="960" height="624"></canvas>
   <div id="overlay" class="hidden"></div>
 </div>
-<script src="js/util.js?v=21"></script>
-<script src="js/assets.js?v=21"></script>
-<script src="js/audio.js?v=21"></script>
-<script src="js/map.js?v=21"></script>
-<script src="js/actors.js?v=21"></script>
-<script src="js/fx.js?v=21"></script>
-<script src="js/main.js?v=21"></script>
+<script src="js/util.js?v=26"></script>
+<script src="js/assets.js?v=26"></script>
+<script src="js/audio.js?v=26"></script>
+<script src="js/map.js?v=26"></script>
+<script src="js/actors.js?v=26"></script>
+<script src="js/fx.js?v=26"></script>
+<script src="js/main.js?v=26"></script>
 </body>
 </html>

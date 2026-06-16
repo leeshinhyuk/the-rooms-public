@@ -15,38 +15,54 @@
   BK.buildAssets();
   BK.fx.init();
 
+  // 캐릭터 외형 (헤어/의상) — 저장된 선택을 불러와 적용
+  function loadLook() {
+    try {
+      const v = JSON.parse(localStorage.getItem('bk_look'));
+      if (v && Number.isInteger(v.hair) && Number.isInteger(v.outfit)) {
+        return { hair: BK.clamp(v.hair, 0, BK.PLAYER_HAIR.length - 1), outfit: BK.clamp(v.outfit, 0, BK.PLAYER_OUTFIT.length - 1) };
+      }
+    } catch (e) { /* noop */ }
+    return { hair: 0, outfit: 0 };
+  }
+  function saveLook(look) { try { localStorage.setItem('bk_look', JSON.stringify(look)); } catch (e) { /* noop */ } }
+  const playerLook = loadLook();
+  BK.setPlayerLook(playerLook.hair, playerLook.outfit);
+
   // ---------------- 텍스트 (먼저 떨어진 자의 기록) ----------------
   // 기록 본문 = 종이에 적힌 쪽지. 읽고 나서 떠오르는 '현재의 생각'은 NOTE_AFTER로 분리해
   // 닫은 뒤 하단에 순차적으로 띄운다.
+  // 동생 이름 — L0~L2엔 화자가 못 떠올린다(의심을 키운다). L3 캠코더에서야 또렷이 돌아온다.
+  const BRO_NAME = '레오';
   const NOTE_TEXTS = [
     // LEVEL 0 (0~4) — 죄책감으로 들어옴 + 루프 단서의 시작
-    '내 잘못이었다. 그 애 손을 잡고 있었는데, 잠깐 — 정말 잠깐 휴대폰을 봤다.\n다시 고개를 들었을 때 동생은 없었다. 바닥이 그 애를 삼켰다.\n경찰은 "가출"이라 했다. 나는 안다. 그 애는 여기로 떨어졌다.\n그래서 나도 같은 계단에서 발을 헛디뎠다. 일부러.\n동생아, 형이 간다. 이번엔 손 놓지 않을게.',
-    '걷고 또 걸었다. 같은 벽지, 같은 형광등, 출구는 없다.\n벽 너머에서 누가 내 이름을 부른다. …동생 목소리 같다.\n쫓아가면 사라지고, 멈추면 다시 부른다.\n이상한 건 이 벽 낙서다. 내가 쓴 것 같은 글씨.',
-    '노란 병을 찾았다. "아몬드 워터". 마시면 머리가 맑아진다.\n안 마시면 기억이 녹는다. 어제 일이 안 떠오른다.\n동생 얼굴도 자꾸 흐릿해진다 — 그래서 적어 둔다.\n갈색 곱슬머리, 앞니 빠진 웃음, 노란 우비.\n잊으면 찾을 수 없어. 보이면 무조건 마셔라.',
-    '규칙을 적어 둔다. 다음에 올 "나"를 위해.\n이 기록들, 필체가 전부 똑같다. 종이는 다 다른데 글씨는 하나다.\n전부 내 글씨다. 날짜를 셀 수 없을 만큼 오래된 것도, 방금 쓴 것도.',
-    '균열을 찾았다. 보라색으로 지직거리는 벽의 상처. 드디어 집에—\n(글씨가 손톱으로 긁은 것처럼 변한다)\n거짓말이었다. 균열은 출구가 아니라 입이었다. 더 깊이 삼켜졌다.',
+    '실내 놀이방. 생일 노래가 끝나고, 아이들이 케이크 앞으로 몰려갔다.\n나는 그 애 손을 잡고 있었다. 잠깐 — 정말 잠깐 휴대폰 화면을 봤을 뿐인데.\n다시 고개를 들었을 때, 손바닥이 비어 있었다. 노란 매트가 물처럼 꺼지고 있었다.\n며칠 동안 수색이 이어졌다. 하지만 "바닥 아래로 사라졌다"는 말은 아무도 믿지 않았다.\n그래서 나는 폐점한 놀이방으로 돌아왔다. 같은 노란 매트 위에 섰다. 일부러.',
+    '처음 떨어진 곳은 놀이방이 아니었다. 누런 벽지, 젖은 카펫, 끝없는 형광등.\n그 애 목소리가 벽 너머에서 들린다. 가까이 가면 멀어지고, 멈추면 다시 부른다.\n벽마다 긁힌 글씨가 있다. 남의 글씨여야 하는데, 손이 먼저 알아본다.',
+    '노란 병을 찾았다. 라벨엔 "아몬드 워터". 마시면 머릿속 안개가 조금 걷힌다.\n안 마시면 하루가 뭉개진다. 어제 쓴 글도 낯설어진다.\n동생 얼굴도 자꾸 흐릿해진다. 그래서 적어 둔다.\n앞니 빠진 웃음. 노란 우비. 손바닥에 묻은 케이크 크림.\n이름을 쓰려는데 펜 끝이 멈춘다. 분명 알고 있는데, 종이 위로는 안 내려온다.',
+    '규칙을 적어 둔다. 다음에 올 나를 위해.\n종이는 다 다른데, 필체가 하나다. 오래전에 쓴 것도, 방금 쓴 것도.\n모두 내 글씨다.\n나는 여기 처음 온 게 아니다. 처음이라고 믿도록, 매번 깎여 나갔을 뿐이다.',
+    '균열을 찾았다. 보랏빛으로 곪은 벽의 상처. 드디어 집에—\n(여기서부터 글씨가 손톱자국처럼 찢어진다)\n문이 아니었다. 입이었다.\n열었다고 생각한 순간, 더 깊은 곳으로 삼켜졌다.',
     // LEVEL 2 (5~7) — 1차 반전(루프) 확정
-    '기계실. 아무것도 만들지 않는 기계가 영원히 돈다.\n소리 사이에 목소리가 섞인다. 동생 목소리로 내 이름을 부른다.\n대답할 뻔했다. 대답하면 그게 네 목소리를 가져간다.',
-    '어둠 속에서 눈 없는 것이 네 발로 긴다. 소리로 사냥한다. 딸깍, 딸깍.\n달려서 도망칠 수 없다. 멈춰라. 숨도 멈춰라. 지나갈 때까지.\n그것에게 잡힌 시체를 봤다. 목에 사원증이 걸려 있었다.\n사진을 닦아 봤다.',
-    '발전기가 멈춰 있다. 퓨즈를 분전반에 꽂아야 불이 들어오고 엘리베이터가 움직인다.\n어둠 속의 것들에 자꾸 눈이 간다. 하나는 사원증을, 하나는 해진 작업복을 걸치고 있다.\n사람이 입던 것들이다.',
-    // LEVEL 3 (8~10) — 2차 반전(동생 실재)
-    '엘리베이터는 위로 갔는데, 문이 열리니 유치원이다.\n벽마다 크레용 그림. 아이들이 웃고 있다. 입이 얼굴보다 크게.\n그림 구석마다 같은 글씨 — "선생님이 같이 놀재요", "형은 언제 와요?".',
-    '여기엔 아이들의 영혼이 갇혀 있다. 광대가 데려간 아이들.\n각자 잃어버린 것을 안고 운다. 곰인형, 풍선, 오르골 태엽.\n그것을 찾아 돌려주면 영혼이 풀려난다 — 그리고 진실을 한 조각씩 속삭인다.\n셋이 있다. 그 중 하나가… 노란 우비를 입고 있다.',
-    '동생은 환영이 아니었다. 내 미쳐가는 머리가 지어낸 것도, 이곳의 거짓도 아니었다.\n정말 여기 있었다 — 그리고 여기서 죽었다. 내가 손을 놓은 그 순간부터, 줄곧.\n나는 그 애를 구하러 온 게 아니다. 이미 늦었으니까.\n나는 "놓아주러" 온 것이다. 매번. 그리고 매번 그 손을 차마 못 놓는다.',
+    '기계실. 아무것도 만들지 않는 기계가 계속 돈다.\n기계음 사이에 목소리가 낀다. 그 애 목소리로 내 이름을 부른다.\n대답할 뻔했다. 대답하면, 그게 내 목소리를 가져갈 것 같았다.',
+    '어둠 속에서 눈 없는 것이 네 발로 긴다. 소리로 사냥한다. 딸깍, 딸깍.\n달려서 도망칠 수 없다. 멈춰라. 숨도 멈춰라. 지나갈 때까지.\n그것에게 잡힌 시신을 봤다. 목에 사원증이 걸려 있었다.\n흙먼지를 닦자, 사진 속 얼굴이 나를 보고 있었다.',
+    '발전기가 멈춰 있다. 퓨즈를 꽂아 불을 되살려야 엘리베이터가 움직인다.\n어둠 속의 것들이 자꾸 눈에 밟힌다. 하나는 사원증을, 하나는 해진 작업복을 걸치고 있다.\n처음부터 저 모습은 아니었을지도 모른다.',
+    // LEVEL 3 (8~10) — 동생 실재 여부를 캠코더 직전까지 의심으로 남긴다
+    '엘리베이터는 위로 갔는데, 문이 열리자 낡은 놀이방 냄새가 났다.\n벽마다 크레용 그림. 아이들이 웃고 있다. 입이 얼굴보다 컸다.\n그림 구석엔 삐뚤삐뚤한 글씨. "선생님이 같이 놀자고 해요." 그리고, "형은 언제 와요?"',
+    '아이 셋이 울고 있다. 저마다 잃어버린 것을 부른다. 곰인형, 풍선, 작은 태엽.\n찾아 돌려주면 잠깐 얼굴이 또렷해지고, 빛이 빠져나간다.\n셋 중 하나가 노란 우비를 입고 있다.\n가까이 가면 목 안쪽이 막힌다. 이름을 부르려고 할수록, 이름만 빠져나간다.',
+    '노란 우비 아이가 나를 본다.\n나는 늦었다. 그건 안다. 하지만 무엇에 늦었는지, 아직 쓸 수 없다.\n그 애 손에 작은 태엽이 없다. 내가 찾아 줘야 한다.\n돌려주면 기억이 돌아올까. 아니면, 더는 모른 척할 수 없게 될까.\n다음의 나야. 그 앞에서 도망치지 마라. 하지만 너무 빨리 믿지도 마라.',
   ];
   // 기록을 다 읽고 덮은 뒤, 하단에 순차적으로 떠오르는 '현재의 나'의 생각
   const NOTE_AFTER = [
-    [],
-    ['나는 여기 처음 왔다. …처음 왔는데. 그렇지?'],
-    [],
-    ['…방금 뭐라고 썼지. "다음에 올 나". 왜 그렇게 썼을까.', '나는 여기 와 본 적이 있다. 한 번이 아니라.'],
-    ['나는 매번 이 길을 걷고, 매번 "처음"이라 믿는다.', '이 세계가 기억을 먹고, 동생을 찾으려는 갈망만 남긴다.', '…동생이 정말 있긴 했나. 내가 지어낸 건 아닐까.'],
-    ['더는 묻지 않는다 — 내가 여기 몇 번째 왔는지.', '셀 기억이, 남아 있지 않으니까.'],
+    ['그날의 노란 매트. 손을 놓은 건 바닥이었을까, 나였을까.'],
+    ['나는 여기 처음 왔다. …처음 왔다고 믿고 싶다.'],
+    ['이름이 떠오르지 않는다. 목소리만 남고, 이름만 없다.'],
+    ['"다음에 올 나"라니. 나는 누구에게 적고 있었던 걸까.', '처음이 아니다. 그 사실만은 이제 부정할 수 없다.'],
+    ['집으로 가는 문은 아니었다. 그런데도 나는 매번 그걸 열었나 보다.', '기억은 사라지고, 찾겠다는 마음만 남는다.'],
+    ['기계 소리에 섞인 목소리. 대답하면, 내 것도 사라진다.'],
     ['…내 얼굴이었다.', '이전의 내가 여기서 죽었다. 그런데 나는 아직 걷고 있다.'],
-    ['불을 켜면 잿빛 그것이 굳는다. 빛이 잠깐… 사람의 모양으로 되돌리는 걸까.', '나도, 이렇게 되는 걸까.'],
-    ['…"형은 언제 와요." 그 글씨를, 나는 안다.', '그 애가 여기 있었다. 정말로, 여기.'],
-    ['나는 그 앞에 차마 다가가지 못하고, 이 글을 쓴다.'],
-    ['못 놓으니까 이곳이 나를 안 보내고, 기억을 지워 다시 데려온다.', '이번엔 부탁이다, 다음의 나야. 셋을 다 풀고 — 동생도 보내 줘. 그래야 끝난다.'],
+    ['사원증, 작업복, 해진 신발. 저것들도 한때는 누군가였다.', '나도 저렇게 남게 될까.'],
+    ['"형은 언제 와요." 그 글씨 앞에서 발이 떨어지지 않는다.'],
+    ['노란 우비. 작은 손. 그런데 이름만 비어 있다.'],
+    ['도망치면 또 처음으로 돌아갈 것이다.', '이번엔 끝까지 봐야 한다. 내가 잃은 것이 무엇인지.'],
   ];
   const FLAVOR = [
     [
@@ -66,6 +82,9 @@
       '기계 소리에 목소리가 섞여 있다. 대답하지 마라.',
       '딸깍… 딸깍… 어둠 속에서 무언가가 더듬는다.',
       '어둠 속에 잿빛 형체가 굳어 있다. …아까보다 가까운가?',
+      '기름 냄새 사이로 — 크레용 냄새? …설마.',
+      '기계 소음에 아이 흥얼거림이 섞였다. …그쳤다.',
+      '사물함마다 이름표. 닳아서 안 보이는데, 하나는 왠지 낯익다.',
     ],
     [
       '크레용 냄새가 난다.',
@@ -77,11 +96,33 @@
       '노란 우비 자락이 복도 끝으로 사라졌다. …동생?',
     ],
   ];
-  const WRITING_MSGS = ['뒤를 봐', '나가는 길은 위가 아니다', '아직도 그 애를 찾니', '너는 처음이 아니야', '손을 놓아', '이 글씨, 네 글씨야', '몇 번째니'];
+  // 벽 낙서는 진행도에 따라 더 직접적으로 변한다. 초반부터 반전을 말하지 않도록 분리.
+  const WRITING_MSGS_L0_BASE = ['뒤를 봐', '나가는 길은 위가 아니다', '아직도 그 애를 찾니', '손 놓지 마', '여긴 조용한 척한다'];
+  const WRITING_MSGS_L0_MID = ['너는 처음이 아니야', '같은 길을 또 걷는다', '이 글씨, 낯익지 않아?'];
+  const WRITING_MSGS_L0_LATE = ['이 글씨, 네 글씨야', '몇 번째니', '다음의 너에게'];
   // 기계실(L1) 전용 낙서 — 미쳐가며 긁은 단편. 단정하지 않고 흘린다.
-  const WRITING_MSGS_L1 = ['그것도 한때', '불 꺼뜨리지 마', '먼저 온 자들', '세지 마', '이름 붙이지 마', '곧 너도'];
+  const WRITING_MSGS_L1 = ['그것도 한때', '불 꺼뜨리지 마', '먼저 온 자들', '세지 마', '이름 붙이지 마', '곧 너도', '데일은 불을 끈다', '레예스가 먼저였다', '우리도 누굴 찾으러 왔었다', '여긴 우리 직장이었다', '노라는 불을 켜 둔다', '야간조 전원'];
+  const WRITING_MSGS_L3 = ['같이 놀자', '선생님이 부른다', '노란 애는 아직 기다려', '형은 언제 와요', '손잡고 들어가면 못 나가', '광대는 빈자리를 싫어해'];
+  function writingPoolForZone() {
+    if (game.zoneIdx === 0) {
+      const pool = WRITING_MSGS_L0_BASE.slice();
+      if (game.notesRead >= 3) pool.push(...WRITING_MSGS_L0_MID);
+      if (game.notesRead >= 5) pool.push(...WRITING_MSGS_L0_LATE);
+      return pool;
+    }
+    if (game.zoneIdx === 1) return WRITING_MSGS_L1;
+    return WRITING_MSGS_L3;
+  }
+  // 놀이방(L3) 크레용 벽화 — 아이들이 그린 그림. 흩어진 패널을 모아 아이들의 최후를 읽는다.
+  const MURAL_PANELS = [
+    '크레용 그림 — 아이들이 광대와 손잡고 둥글게 돈다. 웃는 입이 얼굴보다 크다.',
+    '크레용 그림 — 아이들이 줄지어 어떤 문으로 들어간다. 문 위엔 풍선. 맨 뒤 아이만 뒤를 돌아본다.',
+    '크레용 그림 — 아까보다 아이가 줄었다. 빈자리마다 까만 크레용으로 동그라미만 덩그러니.',
+    '크레용 그림 — 이제 한 명. 노란 우비 아이가 매트 끝에 혼자 서 있다. 옆에 삐뚤빼뚤 "형".',
+    '크레용 그림 — 손잡은 큰 사람과 작은 노란 우비. 큰 사람 쪽만 까만 크레용으로 문질러 지워져 있다.\n구석에 작게 — "형이 손을 놨어."',
+  ];
   // 정신력이 낮을 때 떠오르는 거짓 속삭임 (불신 유발)
-  const FAKE_MSGS = ['뒤를 봐.', '동생 같은 건 없어. 넌 미쳤어.', '그 목소리, 네가 지어낸 거야.', '거의 다 왔어… 거짓말.', '이번엔 다를 거야. 거짓말.', '방금 그 소리, 네 발소리 아니야.', '여긴 아까 그 방이야.'];
+  const FAKE_MSGS =['뒤를 봐.', '동생 같은 건 없어. 넌 미쳤어.', '그 목소리, 네가 지어낸 거야.', '넌 외동이었어. 동생 같은 건, 처음부터.', '그 애 이름을 대 봐. …못 대잖아.', '거의 다 왔어… 거짓말.', '이번엔 다를 거야. 거짓말.', '방금 그 소리, 네 발소리 아니야.', '여긴 아까 그 방이야.'];
   const BRO_MSGS = ['…동생 목소리. 진짜일까, 내 머릿속일까.', '"형… 여기야…" 쫓아가면 아무도 없다.', '"형, 왜 손을 놨어?" …나는 멈춰 선다.'];
   const PORTAL_KINDS = ['rift', 'elevator', 'door'];
   const MON_NAME = { smiler: '미소 짓는 것', crawler: '눈 없는 것', clown: '광대', child: '우는 아이', shade: '꺼진 것' };
@@ -90,27 +131,40 @@
     smiler: { tag: '잡아먹진 않아. 표정을 가져갈 뿐.',
       story: '사람들이 "노클립"이라 부르던 그것일 거다. 잡아먹지는 않는다 — 마지막 표정만 가져간다.\n그 하얀 미소는, 먼저 삼켜진 얼굴들을 겹쳐 쓴 것이다. 한 번 웃었다면, 너를 찾았다는 뜻이다.' },
     crawler: { tag: '소리를 내는 건 뭐든 못 견뎌 해.',
-      story: '어둠을 너무 오래 기어 다니다 눈이 말라붙은 것 같다.\n이제 소리로만 더듬는다. 아직 숨 쉬는 것들을 — 살아 있다는 그 소리를 — 견디지 못한다.' },
+      story: '경비원 레예스. 아직 사원증을 목에 건 채다 — 어둠을 너무 오래 기어 다녀 눈이 말라붙었다.\n이제 소리로만 더듬는다. 아직 숨 쉬는 것들을 — 살아 있다는 그 소리를 — 견디지 못한다.' },
     clown: { tag: '멈추지도, 방향을 틀지도 못해.',
-      story: '아이들을 잃어버린 어릿광대였던 모양이다.\n그 애들을 찾겠다며 같은 놀이를 멈추지 못한다. 똑바로 달릴 줄만 알고, 방향도 멈춤도 잊었다.' },
+      story: '파티 광대 피트였던 모양이다. 12년간 맡은 아이를 한 번도 잃은 적이 없었다 — 그날, 전까지.\n잃은 아이들을 찾겠다며 같은 놀이를 멈추지 못한다. 똑바로 달릴 줄만 알고, 방향도 멈춤도 잊었다.' },
     child: { tag: '혼자 남는 게 무서워 전부 부르는 거야.',
       story: '오지 않을 누군가를 부르며 우는 아이다.\n그 비명은 우릴 해치려는 게 아니다. 혼자 남는 게 무서워, 닿는 모든 걸 곁으로 끌어당기는 것뿐이다.' },
     shade: { tag: '빛 속에선 굳어. 어둠이 그것의 다리야.',
-      story: '미소 짓는 것을 피해 어둠에 너무 오래 숨었던 사람이었을 거다.\n어둠이 살에 스며, 이제 빛이 닿으면 사진처럼 굳어 버린다.\n빛이 없는 곳에서만 걷는다 — 눈을 떼는 순간, 한 발 더 가까이.' },
+      story: '정비공 데일이었을 거다 — 미소 짓는 것을 피해 어둠에 너무 오래 숨었던.\n어둠이 살에 스며, 이제 빛이 닿으면 사진처럼 굳어 버린다.\n빛이 없는 곳에서만 걷는다 — 눈을 떼는 순간, 한 발 더 가까이.' },
   };
-  const RELIC_NAME = { teddy: '낡은 곰인형', balloon: '바람 빠진 풍선', gear: '오르골 태엽' };
+  const RELIC_NAME = { teddy: '낡은 곰인형', balloon: '바람 빠진 풍선', gear: '오르골 태엽', music: '낡은 오르골' };
   // 영혼이 해방되며 속삭이는 단서 (want 순서: teddy, balloon, gear=동생)
   const SPIRIT_LINES = {
-    teddy: '"고마워… 형아. 곰돌이 안고 잘게…" 영혼이 빛으로 풀어진다.',
-    balloon: '"내 풍선… 놓쳤었는데…" 아이가 처음으로 웃으며 사라진다.',
-    gear: '동생이 고개를 든다. "형, 진짜 왔네." …그리고 모든 것이 떠오른다.',
+    teddy: '"곰돌이… 고마워, 형아. 광대가 같이 놀자 했을 때, 이걸 두고 갔거든." 그제야 편히 눈을 감는다.',
+    balloon: '"풍선 놓쳐서 주우러 갔다가… 그 문으로 들어갔어. 못 나왔어." 아이가 처음으로 웃는다. "노란 우비 입은 애도 있어 — 자꾸 형 기다리는." 그러곤 빛으로 풀어진다.',
+    gear: '노란 우비 아이가 고개를 든다. "형, 진짜 왔네." 손끝에 닿자, 오래 막혀 있던 기억이 흔들린다.',
+    music: '숨어 있던 아이가 고개를 든다. "나는… 안 울었어. 아무도 안 올 줄 알아서." 오르골을 안고 빛으로 풀어진다.',
   };
+  // 비밀 경로 — 동생 영혼을 돌처럼 부술 때, 금이 갈 때마다 내뱉는 애원 (충격 연출)
+  const BRO_PLEAD = [
+    '동생의 빛에 금이 간다. "형…? 아야… 왜 그래, 형."',
+    '"형, 나야. 나 좀 봐. 왜 이래…" 빛이 더 흐려지고, 잿빛이 번진다.',
+  ];
+  // 금단의 속삭임 — 동생 곁에서 정신력이 낮을 때 떠오르는 거짓 자비 (비밀 엔딩 유도)
+  const FORBIDDEN_MSGS = [
+    '(못 보내겠으면… 차라리 끝내. 부숴서.)',
+    '(돌이 되기 전에. 네 손으로.)',
+    '(그게 더 자비로운 거야. 던져.)',
+    '(어차피 매번 못 놓잖아. 이번엔 다르게 해.)',
+  ];
   // 시체를 조사할 때의 도입 묘사 (루프 복선 포함)
   const CORPSE_INTRO = [
     '얼굴 없는 시신이 후드 안에 웅크려 있다.',
     '손에 빈 아몬드 워터 병을 쥔 채 굳었다.',
-    '당신과 똑같은 후드티를 입고 있다. …우연이겠지.',
-    '목의 사원증을 닦자 — 당신 얼굴이 나온다.',
+    '당신과 똑같은 옷을 입고 있다. …우연이겠지.',
+    '목의 사원증 사진은 긁혀 있다. 그런데도 이상하게 낯익다.',
   ];
   const CORPSE_SCARE_INTRO = [
     '눈코입 없던 시신이 — 얼굴을 들었다!',
@@ -129,13 +183,20 @@
       { t: '마네킹, 눈 떼지 마. 안 볼 때만 움직여. 똑바로 보면서 지나가.' },
       { t: '아몬드 워터. 발치에 깨뜨려 봐. 잠깐 둔해지더라.' },
       { t: '미소 짓는 게 여기도 있어. 모퉁이에서 기다린다. 돌지 마.' },
-      { t: '잿빛 그거, 빛에 닿으면 굳어. 비추는 동안엔 못 와.' },
+      { t: '잿빛 그거, 빛에 닿으면 굳어. 오래 비추면… 아주 굳어 버리더라. 영영.' },
       { t: '불을 켜. 발전기. 어두우면 그게 걸어 다녀.' },
+      { t: '잿빛 그것 — 데일이야. 우리 정비반이었어. 빛을 떼지 마, 떼면 걸어와.' },
+      { t: '소리로만 기는 놈, 그거 레예스야. 멈춰서 숨 죽이면 못 찾아. 뛰면 끝이고.' },
+      { t: '마커스는 좁은 데로만 다녀 — 환기구, 파이프 사이. 넓은 데론 안 나와. 우리랑 같이 야간조였는데.' },
+      { t: '퓨즈 못 모으겠으면 — 저 끝 천장 환풍구로 기어 나간 놈도 있다. 어둠을 한참 지나야 해.', hatch: true },
     ],
     [ // L3(놀이방)
       { t: '광대. 옆으로 한 발이면 돼. 똑바로만 달리고 방향을 못 틀어.' },
       { t: '우는 애한테 가지 마. 비명 한 번이면 전부 몰려와.' },
       { t: '울음은 미끼야. 소리를 등지고 와. 절대 쫓아가지 마.' },
+      { t: '광대 이름이 피트래. 데려간 애들이 밤새 운다 — 곰인형 든 애, 풍선 든 애. 잃은 걸 손에 쥐여 줬더니 그제야 울음을 그치더라.' },
+      { t: '여기 애들은 광대가 잃은 게 아냐 — 잃은 애를 찾겠다고 자꾸 다른 애를 데려온 거지. …나도 누굴 찾으러 왔던 것 같은데.' },
+      { t: '나는 안 나가. 문이 열려도. 여기 그 애가 있으니까. 못 보내겠고, 못 떠나겠다. …너도 곧 알게 돼.' },
     ],
   ];
   function pickCorpseMemo(pr) {
@@ -146,15 +207,31 @@
   // 변해가는 시신의 1인칭 단편 — 설명하지 않고, 정황으로 흘린다(보여주기).
   // 무작위 순서로 읽어도 각자 한 조각씩 남는다.
   const CORPSE_TURN_MEMOS = [
-    '박 씨가 사흘째 말이 없다. 손끝이 차고 단단해. 자꾸 불을 끄려 든다.',
+    '데일이 사흘째 말이 없다. 손끝이 차고 단단해. 자꾸 불을 끄려 든다.',
     '거울에 내 얼굴이 안 비친다. 손등이 돌처럼 식어 간다. 불빛이 따갑다.',
     '복도 끝의 그것이 내 이름을 부른다. 옛날 사원증을 아직 목에 걸고 있더라.',
     '몇이나 여길 못 나갔을까. 세다가 그만뒀다. …다들 어디 갔나 했더니.',
     '이름은 적지 않겠다. 부르면, 그게 돌아본다.',
+    '데일이 결국 어둠으로 걸어 들어갔다. 빛을 대면 굳어 버려서 — 그래서 다들 불을 끈다.',
+    '레예스는 이제 소리만 좇아 긴다. 어제까진 나한테 커피 농담을 걸던 사람인데.',
+    '먼저 온 우리가 먼저 변한다. 다음은 너고, 그다음은 너를 찾으러 온 누군가다.',
+    '마커스가 환기구로 기어들어 갔다. 이젠 좁은 데로만 다닌다. 이름을 불러도 안 돌아본다.',
+    '노라는 불 있는 데서만 잔다. 어두워지면 운다. 우리 중 제일 오래 버틴다.',
+    '사물함 자물쇠를 내 손이 먼저 푼다. 번호를 안다. …나, 여기서 일했었나.',
   ];
   function pickTurnMemo(pr) {
     const i = Math.abs((Math.round(pr.x) * 5 + Math.round(pr.y) * 11)) % CORPSE_TURN_MEMOS.length;
     return CORPSE_TURN_MEMOS[i];
+  }
+  // 반쯤 사람인 채 애원하는 변이 시신 — 외면할지, 끝내 줄지(돌). 동생 테마의 '낯선 사람' 예행연습.
+  const BEGGING_MEMOS = [
+    '반쯤 굳은 손이 네 발목을 잡는다. "불… 좀. 아직 사람일 때, 한 번만."',
+    '"끝내 줘. 다 굳기 전에. 부탁이야." 입만 아직 사람이다.',
+    '"날 기억해 줄래? …이름이, 이름이 뭐였더라." 그러다 잿빛이 다시 번진다.',
+  ];
+  function pickBeggingMemo(pr) {
+    const i = Math.abs((Math.round(pr.x) * 3 + Math.round(pr.y) * 17)) % BEGGING_MEMOS.length;
+    return BEGGING_MEMOS[i];
   }
 
   // ---------------- 인트로 컷신 (왜 이곳에 왔는가) ----------------
@@ -163,12 +240,12 @@
       head: '도심 한복판에서, 사람들이 사라진다',
       body: '올해만 일곱 번째다. CCTV에 잡힌 마지막 모습 이후, 그들은 말 그대로 흔적 없이 사라졌다. 목격자도, 시신도 없다.<br>온라인에서는 이를 <b>노클립(noclip)</b>이라 부른다 — 현실의 벽을 잘못 디뎌 그 "뒤편"으로 떨어지는 것.' },
     { type: 'mono',
-      text: '그날, 당신은 어린 동생을 봐주고 있었다.<br>손을 꼭 잡고 있었다. 잠깐 — 정말 잠깐 휴대폰을 보았을 뿐인데.<br><span class="small">다시 고개를 들었을 때, 잡고 있던 손이 비어 있었다.</span>' },
+      text: '그날은 동생 생일이었다.<br>실내 놀이방엔 풍선 냄새와 크레용 냄새가 섞여 있었다.<br>당신은 그 애 손을 잡고 있었다. 잠깐 — 정말 잠깐 휴대폰을 보았을 뿐인데.<br><span class="small">다시 고개를 들었을 때, 잡고 있던 손이 비어 있었다.</span>' },
     { type: 'news', tag: '가족 제보 · 미공개', date: '— 여덟 번째 실종자',
-      head: '아이는 바닥으로 사라졌다',
-      body: '당신은 봤다. 동생이 마룻바닥을 <b>통과해</b> 가라앉는 것을. 아무도 믿지 않았다.<br>몇 달 뒤, 당신의 휴대폰에 출처 없는 음성이 도착한다:<br>"…형, 여기 어두워. 누가 자꾸 같이 놀재. <b>형, 왜 손을 놨어?</b>"' },
+      head: '아이는 놀이방 바닥 아래로 사라졌다',
+      body: '당신은 봤다. 노란 매트가 물처럼 꺼지고, 동생이 그 아래로 가라앉는 것을. 아무도 믿지 않았다.<br>몇 달 뒤, 당신의 휴대폰에 출처 없는 음성이 도착한다:<br>"…형, 여기 어두워. 누가 자꾸 같이 놀자고 해. <b>형, 왜 손을 놨어?</b>"' },
     { type: 'mono',
-      text: '당신은 그 애가 사라진 바로 그 자리에 섰다.<br>그리고 일부러, 한 발을 헛디뎠다.<br><span class="small">발이 닿을 콘크리트가 없었다. 당신은 바닥을 통과해 떨어진다. 이번엔 손을 놓지 않으려고.</span>' },
+      text: '폐점한 놀이방은 그대로 남아 있었다.<br>당신은 그 애가 사라진 노란 매트 위에 섰다.<br><span class="small">이번엔 고개를 돌리지 않으려고. 이번엔 손을 놓지 않으려고.</span>' },
   ];
   let introIdx = 0;
   // 한국어 받침 판별 조사: josa('광대','이','가')='광대가', josa('것','이','가')='것이'
@@ -190,6 +267,7 @@
     finale: false,
     msgs: [],
     flavorT: 14, eventT: 18, pressT: 4, manT: 5, pingT: 9, ambT: 3,
+    heat: -0.6, safeStreak: 0,
     _nearD: 9999, _nearM: null,
     pingShow: 0, pingTarget: null, pingToldZone: -1,
     throwables: 2, projectile: null, lure: null,
@@ -198,7 +276,11 @@
     carrying: null, spiritFx: null, fuseHeld: 0, powerOn: true,
     almond: 0, almondSplash: null,
     flickerT: 0, lightsOutT: 0, chaseFlick: 0,
-    heartT: 0, faceCD: 20, faceFlashT: 0,
+    heartT: 0, faceCD: 20, faceFlashT: 0, breathT: 5, forbidT: 10,
+    clingT: 0, clingStage: 0, // 엔딩 "같이 남다" — 동생 곁에서 항복하는 시간
+    forbiddenSeen: false, combatHintShown: false,
+    shadePetrifiedOnce: false, clownDownOnce: false,
+    silenceT: 0, fxTimers: [], peripheralCD: 0,
     halluc: null, eyes: null, doppel: null,
     jumpT: 0, jumpMon: 'smiler', readingNote: -1,
     deathCause: '', deathMon: 'smiler',
@@ -229,6 +311,7 @@
     if (k === 'm' && BK.audio.started) {
       toast(BK.audio.toggleMute() ? '음소거' : '음소거 해제');
     }
+    if (game.state === 'customize' && (k === 'enter' || k === ' ')) { confirmLook(); return; }
     if (game.state === 'intro' && (k === ' ' || k === 'enter')) { advanceIntro(); return; }
     if (game.state === 'intro' && k === 'escape') { introIdx = INTRO_CARDS.length; advanceIntro(); return; }
     if (game.state === 'play') {
@@ -260,16 +343,85 @@
   function hideOverlay() { overlay.classList.add('hidden'); overlay.innerHTML = ''; }
 
   function showTitle() {
+    let shattered = false;
+    try { shattered = localStorage.getItem('bk_shatter') === '1'; } catch (e) { /* noop */ }
+    // 비밀 엔딩을 한 번 본 사람에게만 보이는 흐릿한 한 줄 (이스터에그)
+    const secretLine = shattered
+      ? `<div class="t-keys" style="color:#7a2a22;animation:flicker 5s infinite">…손을 놓을 수 없거든, 부수는 법도 있다.</div>`
+      : '';
     showOverlay(`
       <div class="box">
         <div class="t-pre">NOCLIP // SURVIVAL HORROR</div>
         <h1 class="t-main">the rooms</h1>
-        <button id="btn-start">동생을 찾으러 간다</button>
+        <button id="btn-start">${shattered ? '다시, 그 안으로' : '동생을 찾으러 간다'}</button>
         <div class="t-keys">이동 WASD/방향키 · 달리기 Shift · 상호작용/숨기 E<br>
         돌 던지기 Q · 아몬드 워터: 마시기 H / 던지기 G(괴물 약화)<br>
         문을 닫아 막고, 가구를 밀어 봉쇄하고, 돌로 주의를 돌려라 · 음소거 M · 일시정지 ESC</div>
+        ${secretLine}
       </div>`);
-    document.getElementById('btn-start').addEventListener('click', () => { BK.audio.init(); showIntro(); });
+    document.getElementById('btn-start').addEventListener('click', () => { BK.audio.init(); showCustomize(); });
+  }
+
+  // ---------------- 캐릭터 커스터마이징 (헤어 / 의상) ----------------
+  function showCustomize() {
+    game.state = 'customize';
+    const swatches = (items, kind, selIdx) => items.map((it, i) => {
+      const col = kind === 'hair' ? (it.cap || it.hair) : it.hood;
+      return `<button class="swatch${i === selIdx ? ' sel' : ''}" data-kind="${kind}" data-i="${i}" title="${it.name}" style="background:${col}"></button>`;
+    }).join('');
+    showOverlay(`
+      <div class="box look-box">
+        <div class="t-pre">당신은, 누구였나</div>
+        <h1 class="end-title" style="color:#d8cc8a;margin-bottom:10px">모습을 고른다</h1>
+        <canvas id="look-prev" width="120" height="132"></canvas>
+        <div class="look-name" id="look-name"></div>
+        <div class="look-row"><span class="look-lab">헤어</span><span class="look-sw">${swatches(BK.PLAYER_HAIR, 'hair', playerLook.hair)}</span></div>
+        <div class="look-row"><span class="look-lab">의상</span><span class="look-sw">${swatches(BK.PLAYER_OUTFIT, 'outfit', playerLook.outfit)}</span></div>
+        <button id="btn-look-go">이 모습으로 떨어진다 [Enter]</button>
+      </div>`);
+
+    const prev = document.getElementById('look-prev');
+    const px = prev.getContext('2d');
+    px.imageSmoothingEnabled = false;
+    let dir = 0, frame = 0, tick = 0;
+    const dirCycle = [0, 2, 3, 1]; // 앞→옆→뒤→옆 천천히 회전
+    function redrawPrev() {
+      px.clearRect(0, 0, prev.width, prev.height);
+      const spr = BK.assets.player[dir][frame % 4];
+      const sc = 7;
+      px.drawImage(spr, (prev.width - spr.width * sc) / 2, (prev.height - spr.height * sc) / 2, spr.width * sc, spr.height * sc);
+    }
+    function nameNow() {
+      document.getElementById('look-name').textContent =
+        `${BK.PLAYER_HAIR[playerLook.hair].name} · ${BK.PLAYER_OUTFIT[playerLook.outfit].name}`;
+    }
+    clearInterval(game._lookAnim);
+    game._lookAnim = setInterval(() => {
+      frame = (frame + 1) % 4;
+      tick++;
+      if (tick % 6 === 0) dir = dirCycle[(tick / 6 | 0) % dirCycle.length]; // 가끔 방향 전환
+      redrawPrev();
+    }, 200);
+    nameNow(); redrawPrev();
+
+    overlay.querySelectorAll('.swatch').forEach((b) => {
+      b.addEventListener('click', () => {
+        const kind = b.dataset.kind, i = +b.dataset.i;
+        playerLook[kind] = i;
+        BK.setPlayerLook(playerLook.hair, playerLook.outfit);
+        overlay.querySelectorAll(`.swatch[data-kind="${kind}"]`).forEach((x) => x.classList.remove('sel'));
+        b.classList.add('sel');
+        nameNow(); redrawPrev();
+        BK.audio.pickup();
+      });
+    });
+    document.getElementById('btn-look-go').addEventListener('click', confirmLook);
+  }
+  function confirmLook() {
+    if (game.state !== 'customize') return;
+    clearInterval(game._lookAnim);
+    saveLook(playerLook);
+    showIntro();
   }
 
   // ---------------- 인트로 시퀀스 ----------------
@@ -314,6 +466,16 @@
     document.getElementById('btn-note').addEventListener('click', closeNote);
   }
 
+  function nextNoteIdxForZone() {
+    const baseByZone = [0, 5, 8];
+    const base = baseByZone[game.zoneIdx] || 0;
+    let readInZone = 0;
+    for (const item of game.world.items) {
+      if (item.kind === 'note' && item.got) readInZone++;
+    }
+    return base + readInZone;
+  }
+
   function closeNote() {
     if (game.state !== 'note') return;
     const idx = game.readingNote;
@@ -329,10 +491,10 @@
       BK.fx.addShake(2.5);
       toast('멀리서… 무언가가 카펫을 밟는 소리가 들렸다.');
     }
-    // L0: 균열 기록은 위치를 알려 주고 여는 법 단서 하나를 준다
+    // L0: 균열 기록(5번째)은 위치 + '깨우기' 단서를 준다 (벌리는 법은 다른 기록/메모에서)
     if (game.zoneIdx === 0 && idx === 4) {
-      knowExitLocation('이 기록이 가리킨다 — 벽이 보라빛으로 곪은 곳. 균열은 출구가 아니라 입이다.');
-      addExitMethodClue();
+      knowExitLocation('이 기록이 가리킨다 — 벽이 보랏빛으로 곪은 곳. 균열은 출구가 아니라 입이다.');
+      learnExitMethod('wake', '기록 끝에 — "힘으로는 안 열렸다. 돌로 쳐서 깨웠더니 그제야 꿈틀하더라."');
     }
     // L0: 모든 기록을 다 모으면 위치도 여는 법도 확실해진다
     if (game.zoneIdx === 0 && questGotCount() >= game.world.cfg.quest.count) {
@@ -361,6 +523,15 @@
       <div class="box">
         <h1 class="end-title" style="color:#d8cc8a">일시정지</h1>
         <p class="end-story">${game.world.cfg.name} — ${game.world.cfg.sub}</p>
+        <div class="end-stats" style="text-align:left;display:inline-block;margin-bottom:22px">
+          이동 <b style="color:#d8cc8a">WASD</b> / 방향키 · 달리기 <b style="color:#d8cc8a">Shift</b> <span style="color:#6e6440">(소리 주의)</span><br>
+          상호작용 · 숨기 · 문 · 가구 <b style="color:#d8cc8a">E</b><br>
+          돌 던지기 <b style="color:#d8cc8a">Q</b> <span style="color:#6e6440">(소리로 유인)</span><br>
+          아몬드 워터 — 마시기 <b style="color:#d8cc8a">H</b> · 던지기 <b style="color:#d8cc8a">G</b> <span style="color:#6e6440">(둔화)</span><br>
+          음소거 <b style="color:#d8cc8a">M</b> · 일시정지 <b style="color:#d8cc8a">ESC</b><br>
+          <span style="color:#8a7f4e">어둠 속의 것들은 보이지 않는다 — 소리로 위치를 읽어라.</span>
+        </div>
+        <br>
         <button id="btn-resume">계속한다</button>
       </div>`);
     document.getElementById('btn-resume').addEventListener('click', () => { game.state = 'play'; hideOverlay(); });
@@ -411,18 +582,84 @@
       best = Number(localStorage.getItem('bk_best')) || null;
       if (!best || game.playT < best) { best = game.playT; localStorage.setItem('bk_best', String(best)); }
     } catch (e) { /* localStorage 사용 불가 환경 */ }
+    // 서브 루트 보너스: 숨은 네 번째 아이까지 보냈다면 작별 한 줄이 더해진다
+    const fourth = (game.world && game.world.fourthFreed)
+      ? '<br><br>그리고 — 울지 않아 아무도 못 찾던 그 아이도, 오르골을 안고 함께 떠났다.'
+      : '';
     showOverlay(`
       <div class="box">
         <h1 class="end-title green">손을 놓다</h1>
-        <p class="end-story">마지막으로 동생의 손을 잡았다. 노란 우비가 빛으로 풀어졌다.<br>
+        <p class="end-story">마지막으로 동생의 손을 잡았다. 노란 우비가 천천히 빛으로 풀어졌다.<br>
         "형, 이제 안 무서워." 그 애가 웃었다. 앞니가 빠진 그 웃음으로.<br>
-        그리고 — 처음으로 — 당신은 그 손을 놓아 주었다.<br><br>
-        문을 지나자 차가운 새벽 공기. 동생은 없다. 오래전에 떠났으니까.<br>
-        하지만 이번엔 당신이 보냈다. 잃은 게 아니라, 놓아준 것이다.</p>
+        당신은 그제야 손에 힘을 푼다. 붙잡고 있는 동안, 아무것도 지키지 못했다는 걸 아니까.<br>
+        그리고 — 처음으로 — 그 손을 놓아 주었다.<br><br>
+        문을 지나자 차가운 새벽 공기. 폐점한 놀이방 유리문 너머로 아침이 오고 있었다.<br>
+        동생은 없다. 오래전에 떠났으니까. 하지만 이번엔, 혼자 떠나게 두지 않았다.${fourth}</p>
         <div class="end-stats">세 영혼을 해방하고 귀환 · 탈출 시간 ${fmtTime(game.playT)}${best ? ` · 최고 기록 ${fmtTime(best)}` : ''}<br>
         남은 정신력 ${Math.round(game.sanity)}% · 마신 아몬드 워터 ${game.drank}병</div>
         <p class="end-story" style="font-size:12px;color:#6e6440;margin-top:14px">
-        …그런데 시간이 지나면, 형광등이 깜빡일 때마다 자꾸 생각난다.<br>그 애를 정말 보낸 게 맞을까. 한 번만 더 확인하면 안 될까.</p>
+        형광등이 깜빡일 때마다, 아직도 그 애 목소리가 들리는 것 같다.<br>하지만 이번엔 안다. 문을 다시 여는 건 그 애가 아니라, 당신이라는 것을.</p>
+        <button id="btn-again">다시 떨어진다 [R]</button>
+      </div>`);
+    document.getElementById('btn-again').addEventListener('click', newGame);
+  }
+
+  // 비밀 엔딩 화면 — 동생을 부숴 끝낸 자
+  function showShatterEnd() {
+    game.state = 'win';
+    game.finale = false;
+    BK.audio.setDread(0); BK.audio.setExitStatic(0); BK.audio.setTension(0); BK.audio.setChase(0, 0); BK.audio.setCrisis(0);
+    BK.audio.zone(-1); // 모든 앰비언스 정지 — 죽은 듯한 정적
+    BK.audio.madness();
+    BK.fx.flash('rgba(40,0,0,0.9)', 1.2);
+    try { localStorage.setItem('bk_shatter', '1'); } catch (e) { /* noop */ }
+    showOverlay(`
+      <div class="box">
+        <h1 class="end-title shatter">동생을 깨뜨리다</h1>
+        <p class="end-story">마지막 금이 가던 순간, 그 애가 너를 올려다봤다. 원망도 없이.<br>
+        "형, 괜찮아. …이제 안 잡으러 와도 돼." 그리고 잿빛으로 부서졌다.<br><br>
+        노란 우비 한 조각을 주머니에 넣는다. 손이 떨리지 않는다 — 그게 더 무섭다.<br>
+        붙잡을 것이 사라지자, 이곳은 더 너를 가둘 이유가 없다. 벽이 스르륵 비켜선다.</p>
+        <p class="end-story" style="color:#c84a3a">너는 걸어 나간다. 다신 이 길을 헤매지 않을 것이다.<br>
+        동생을 잃어서가 아니라, 동생을 끝낸 자가 되었으니까.</p>
+        <div class="end-stats">∎ 비밀 엔딩 · 손수 끝낸 시간 ${fmtTime(game.playT)} · 남은 정신력 ${Math.round(game.sanity)}%<br>
+        루프는 끝났다. 용서는 어디에도 없다.</div>
+        <p class="end-story" style="font-size:12px;color:#6e6440;margin-top:14px">
+        …집에 돌아온 첫 밤, 거울 속의 네가 빠진 앞니로 웃는다. 네 얼굴인데, 네 웃음이 아니다.</p>
+        <button id="btn-again">다시 떨어진다 [R]</button>
+      </div>`);
+    document.getElementById('btn-again').addEventListener('click', newGame);
+  }
+
+  // ===== 엔딩 "같이 남다" — 끝내 놓지 못하고 그 곁에 남아 '먼저 온 우리'가 된다 =====
+  function stayEnding(bro) {
+    game.state = 'cut';
+    if (bro) bro.freed = true; // 더는 추격/상호작용 대상이 아님 (해방이 아니라, 그저 곁에)
+    BK.audio.setChase(0, 0); BK.audio.setDread(0); BK.audio.setTension(0); BK.audio.setCrisis(0);
+    BK.audio.duck(0.05, 1.2, 1.6); // 천천히 잦아드는 정적
+    BK.fx.flash('rgba(20,28,40,0.7)', 1.0);
+    BK.fx.addShake(2);
+    toast('…일어설 수가 없다. 너는 그 애 곁에 주저앉는다.');
+    for (const t of game.cutTimers) clearTimeout(t);
+    game.cutTimers = [setTimeout(() => { if (game.state === 'cut') showStayEnd(); }, 2100)];
+  }
+  function showStayEnd() {
+    game.state = 'win';
+    game.finale = false;
+    BK.audio.setDread(0); BK.audio.setExitStatic(0); BK.audio.setTension(0); BK.audio.setChase(0, 0); BK.audio.setCrisis(0);
+    BK.audio.zone(-1); // 모든 앰비언스 정지 — 죽은 듯한 정적
+    try { localStorage.setItem('bk_stay', '1'); } catch (e) { /* noop */ }
+    showOverlay(`
+      <div class="box">
+        <h1 class="end-title" style="color:#9ab0c8;text-shadow:0 0 16px rgba(154,176,200,0.5)">같이 남다</h1>
+        <p class="end-story">어딘가에서 문이 열렸다 다시 닫히는 소리. 너는 가지 않는다. 갈 수가 없다.<br>
+        "형… 안 가?" ${BRO_NAME}가 묻는다. 너는 고개를 젓는다. 이번엔, 손을 놓지 않는다.<br><br>
+        그 애의 빛이 천천히 사위어 가고, 네 손끝도 잿빛으로 식는다.<br>
+        복도 끝, 벽이 스르륵 닫힌다. 어둠이 살에 스민다 — 따뜻하게.</p>
+        <p class="end-story" style="color:#9ab0c8">언젠가 누군가 이곳으로 떨어져, 형광등 아래에서 —<br>
+        네가 입었던 옷을 걸친 잿빛 형체를 발견할 것이다. 그 곁엔, 작은 그림자 하나.</p>
+        <div class="end-stats">∎ 엔딩 · 끝내 놓지 못한 시간 ${fmtTime(game.playT)}<br>
+        루프는 끝났다. 떠나지 않는 쪽을 골랐으니까.</div>
         <button id="btn-again">다시 떨어진다 [R]</button>
       </div>`);
     document.getElementById('btn-again').addEventListener('click', newGame);
@@ -470,12 +707,15 @@
       const ech = BK.getChunk(world, ecx, ecy);
       const ecell = ech.floorCells[BK.hashCoords(world.seed, ecx, ecy, 77) % ech.floorCells.length];
       world.exit = {
-        kind: 'exit', x: (ecx * C + ecell.x) * T + T / 2, y: (ecy * C + ecell.y) * T + T / 2, opened: false,
+        kind: 'exit', x: (ecx * C + ecell.x) * T + T / 2, y: (ecy * C + ecell.y) * T + T / 2,
+        opened: false, awakeT: 0, // awakeT: 돌로 깨운 직후 '벌릴 수 있는' 창
       };
-      world.exitLocKnown = false;  // 위치를 아는가
-      world.exitOpenKnown = false; // 여는 법을 아는가
-      world.exitMethodSure = false; // 모든 기록으로 확신했는가 (연출용)
-      world.exitClues = 0;          // 여는 법 유추 단서 수
+      world.exitLocKnown = false;   // 위치를 아는가
+      // 여는 법 = 2단계 의식. 각 단계를 따로 알게 되고, 기록을 전부 모으면 확신한다.
+      world.exitWakeKnown = false;  // 1) 돌로 쳐서 깨운다
+      world.exitPryKnown = false;   // 2) 깨어난 직후 손으로 벌린다
+      world.exitMethodSure = false; // 모든 기록으로 전 과정+타이밍을 확신했는가
+      world.exitBit = false;        // 맨몸으로 손대다 물린 적이 있는가 (서브 루트)
     } else if (zoneIdx === 1) {
       placeRing('fuse', [1, 1, 2]);
       placeRing('note', [1, 2, 2], [5, 6, 7]);
@@ -483,6 +723,14 @@
       const fcx = 1, fcy = 0, fch = BK.getChunk(world, fcx, fcy);
       const fcell = fch.floorCells[BK.hashCoords(world.seed, fcx, fcy, 80) % fch.floorCells.length];
       world.fusebox = { x: (fcx * BK.CHUNK + fcell.x) * T + T / 2, y: (fcy * BK.CHUNK + fcell.y) * T + T / 2, installed: 0 };
+      // 서브 루트: 비상 해치 — 발전기 없이도 어둠을 가로질러 빠져나가는 위험한 길 (멀리·깊은 어둠)
+      const ha = BK.hash01(world.seed, 13, 5, 23) * Math.PI * 2;
+      let hcx = Math.round(Math.cos(ha) * 3) || 3, hcy = Math.round(Math.sin(ha) * 3);
+      if (hcx === 0 && hcy === 0) hcx = 3;
+      const hch = BK.getChunk(world, hcx, hcy);
+      const hcell = hch.floorCells[BK.hashCoords(world.seed, hcx, hcy, 88) % hch.floorCells.length];
+      world.hatch = { kind: 'hatch', x: (hcx * BK.CHUNK + hcell.x) * T + T / 2, y: (hcy * BK.CHUNK + hcell.y) * T + T / 2 };
+      world.hatchKnown = false;
     } else {
       // L3: 기록 + 유물 3종 + 아이 영혼 3 (영혼 해방이 목표)
       placeRing('note', [1, 2, 2], [8, 9, 10]);
@@ -497,8 +745,22 @@
         world.spirits.push({
           x: (cx * C + cell.x) * T + T / 2, y: (cy * C + cell.y) * T + T / 2,
           want: wants[i], freed: false, isBrother: i === 2, bob: i * 2.1, cryT: 6 + i,
+          cracks: 0, shattered: false, // 비밀 엔딩: 동생 영혼은 돌처럼 깨뜨릴 수 있다
         });
       });
+      // 서브 루트: 숨은 네 번째 아이 — 울지 않고 멀리 숨은 영혼(선택). 메인 3과 무관하게 보너스.
+      placeRing('relic', [4], [{ relicType: 'music' }]); // 멀리 떨어진 오르골
+      {
+        const a4 = BK.hash01(world.seed, 33, 7, 19) * Math.PI * 2 + 2.0;
+        let scx = Math.round(Math.cos(a4) * 4) || 4, scy = Math.round(Math.sin(a4) * 4);
+        const sch = BK.getChunk(world, scx, scy);
+        const scell = sch.floorCells[BK.hashCoords(world.seed, scx, scy, 62) % sch.floorCells.length];
+        world.spirits.push({
+          x: (scx * C + scell.x) * T + T / 2, y: (scy * C + scell.y) * T + T / 2,
+          want: 'music', freed: false, isBrother: false, hidden4: true, bob: 5.0, cryT: 9999,
+          cracks: 0, shattered: false, // 안 운다(미끼 아님). 메인 카운트에서 제외된다.
+        });
+      }
     }
     return world;
   }
@@ -529,6 +791,10 @@
     game.powerOn = (zoneIdx !== 1); // 기계실은 정전 상태로 시작 (발전기를 켜야 함)
     game.msgs = [];
     game.flavorT = 16; game.eventT = 18; game.pingT = 8; game.pingShow = 0;
+    game.heat = -0.6; game.safeStreak = 0; // 공포 디렉터 — 구역 시작은 평온 골짜기에서
+    game.shadePetrifiedOnce = false; game.clownDownOnce = false; // 서브 루트 알림 1회 플래그
+    game.peripheralCD = 0; // 주변 '깜빡' 비주얼 공유 쿨다운
+    game.breathT = 5; game.forbidT = 10; game.clingT = 0; game.clingStage = 0;
     game.flickerT = 0; game.lightsOutT = 0; game.chaseFlick = 0;
     game.halluc = null; game.eyes = null; game.doppel = null;
     game.projectile = null; game.lure = null;
@@ -537,6 +803,8 @@
     game.carrying = null; game.spiritFx = null; game.almondSplash = null;
     for (const t of game.thoughtTimers) clearTimeout(t);
     game.thoughtTimers = [];
+    for (const t of game.fxTimers) clearTimeout(t);
+    game.fxTimers = []; game.silenceT = 0;
     BK.audio.setDread(0); BK.audio.setExitStatic(0); BK.audio.setTension(0);
     BK.audio.setChase(0, 0); BK.audio.setCrisis(0);
     BK.audio.zone(zoneIdx);
@@ -547,7 +815,8 @@
     game.cutTimers = [];
     game.playT = 0; game.sanity = 100; game.drank = 0; game.notesRead = 0; game.loreRead = 0;
     game.loreSeen = new Set();
-    game.turnRealized = false;
+    game.turnRealized = false; game.beggedSeen = false;
+    game.forbiddenSeen = false; game.combatHintShown = false;
     game.pingToldZone = -1;
     game.throwables = 2; game.almond = 0;
     game.hideHintShown = false;
@@ -557,7 +826,7 @@
     BK.fx.flash('rgba(255,255,255,0.9)', 1);
     BK.fx.addShake(4);
     if (BK.audio.started) BK.audio.thud();
-    toast('…바닥을 통과해 떨어졌다. 동생이 사라진 그 안쪽.');
+    toast('…노란 매트 아래로 떨어졌다. 그 애가 사라진 그 안쪽.');
     setTimeout(() => { if (game.state === 'play' && game.zoneIdx === 0) toast('벽도, 형광등도, 카펫도 다 똑같다. …먼저 다녀간 누군가의 흔적이라도 있을까.'); }, 3500);
   }
 
@@ -596,6 +865,7 @@
     if (kind === 'rift') {
       game.faceFlashT = 0.18;
       game.jumpMon = 'smiler';
+      BK.audio.duck(0.06, 0.05, 0.9);
       BK.audio.riftTrap();
       BK.fx.addShake(7);
       runCards([
@@ -619,8 +889,21 @@
         enterZone(2);
         game.state = 'play';
         BK.fx.flash('rgba(255,235,225,0.6)', 0.7);
-        toast('…여기는, 유치원인가?');
+        toast('…여기는, 그 놀이방인가?');
         setTimeout(() => { if (game.state === 'play') toast('벽 너머에서 아이들이 흐느낀다. 잃어버린 걸 찾아 달라고… 그러는 것 같다.'); }, 3500);
+      });
+    } else if (kind === 'hatch') {
+      // 서브 루트: 비상 해치 — 발전기 없이 어둠을 가로질러 기어 나가는 길. 험한 만큼 대가가 크다.
+      BK.audio.elevatorRide();
+      runCards([
+        { html: `<div class="box"><p class="end-story" style="font-size:17px">좁은 환풍구로 기어든다. 정식 출구가 아니다.<br>금속이 손바닥을 베고, 어둠이 더 깊어진다.</p></div>`, ms: 3400 },
+        { html: zoneCardHTML(BK.ZONES[2]), ms: 2400 },
+      ], () => {
+        enterZone(2);
+        game.sanity = Math.max(22, game.sanity - 14); // 험한 길의 대가(어둠 횡단 자체가 이미 큰 비용 — 도착이 즉사로 이어지지 않게 완화)
+        game.state = 'play';
+        BK.fx.flash('rgba(40,40,55,0.6)', 0.7);
+        toast('…기어 나온 곳도 놀이방이다. 더 어둡고, 더 조용한.');
       });
     } else if (kind === 'door') {
       winGame();
@@ -632,7 +915,7 @@
     const k = game.world.cfg.quest.kind;
     if (k === 'spirit') {
       let n = 0;
-      for (const s of (game.world.spirits || [])) if (s.freed) n++;
+      for (const s of (game.world.spirits || [])) if (s.freed && !s.shattered && !s.hidden4) n++;
       return n;
     }
     if (k === 'fuse') return game.world.fusebox ? game.world.fusebox.installed : 0;
@@ -649,37 +932,57 @@
     w.exitLocKnown = true;
     BK.audio.buzz();
     BK.fx.flash('rgba(164,78,224,0.22)', 0.5);
-    toast(msg || '저 끝에서 보라빛이 지직거린다. …균열이, 저기 있다.');
+    toast(msg || '저 끝에서 보랏빛이 지직거린다. …균열이, 저기 있다.');
   }
-  // 여는 법: 단서가 쌓이면 더듬더듬 유추한다 (다른 경로). 단 하나라도 잡으면 시도는 가능.
-  function addExitMethodClue(msg) {
+  // 서브 루트(L2): 비상 해치의 존재/위치를 알게 된다
+  function knowHatch(msg) {
+    const w = game.world;
+    if (game.zoneIdx !== 1 || !w.hatch || w.hatchKnown) return;
+    w.hatchKnown = true;
+    BK.audio.buzz();
+    toast(msg || '메모 — "퓨즈고 뭐고, 천장 환풍구로 기어 나간 놈도 있다더라. 어둠을 한참 지나야 하지만."');
+  }
+  // 여는 법 단계를 하나씩 알게 된다 (서브 루트). 단계를 알아도 '확신'은 아니다.
+  // part: 'wake'(돌로 깨운다) | 'pry'(깨어난 직후 벌린다)
+  function learnExitMethod(part, msg) {
     const w = game.world;
     if (game.zoneIdx !== 0 || !w.exit) return;
-    w.exitClues = (w.exitClues || 0) + 1;
-    if (msg) toast(msg);
-    if (!w.exitOpenKnown) {
-      w.exitOpenKnown = true; // 첫 단서로 "아마 이렇게 여는 거겠지" 정도는 유추
-      if (!w.exitMethodSure) toast('저 상처… 손을 넣어 벌리면 열릴 것 같다. 아마도.');
-    }
+    let gained = false;
+    if (part === 'wake' && !w.exitWakeKnown) { w.exitWakeKnown = true; gained = true; }
+    else if (part === 'pry' && !w.exitPryKnown) { w.exitPryKnown = true; gained = true; }
+    if (gained && msg) toast(msg);
   }
-  // 모든 기록을 다 읽으면 위치도 여는 법도 확실해진다 (스토리 보상)
+  // 모든 기록을 다 읽으면 위치도, 여는 법 전 과정도 확실해진다 (메인 루트의 보상)
   function knowExitFromAllRecords() {
     const w = game.world;
     if (game.zoneIdx !== 0 || !w.exit) return;
-    knowExitLocation('기록들이 한 점을 가리킨다 — 가장 깊은 어둠, 벽이 보라빛으로 곪은 자리.');
+    knowExitLocation('기록들이 한 점을 가리킨다 — 가장 깊은 어둠, 벽이 보랏빛으로 곪은 자리.');
+    w.exitWakeKnown = true; w.exitPryKnown = true;
     if (!w.exitMethodSure) {
-      w.exitMethodSure = true; w.exitOpenKnown = true;
-      toast('이제 알겠다. 그 상처에 두 손을 넣고, 양쪽으로 찢어 벌리는 거다.');
+      w.exitMethodSure = true;
+      toast('이제 전부 알겠다 — 돌을 던져 상처를 깨우고, 꿈틀하는 그 찰나에 손을 넣어 벌린다. 망설이면 다물린다.');
     }
   }
-  // 휴면 균열을 벌려 활성 포털로 (이후 닿으면 함정처럼 더 깊이 떨어진다)
+  // 깨어난 균열을 벌려 활성 포털로 (이후 닿으면 함정처럼 더 깊이 떨어진다)
   function openRift() {
     const w = game.world;
     if (!w.exit || w.exit.opened) return;
-    w.exit.opened = true;
+    w.exit.opened = true; w.exit.awakeT = 0;
     w.portal = { kind: 'rift', x: w.exit.x, y: w.exit.y };
     BK.audio.buzz(); BK.fx.addShake(3); BK.fx.flash('rgba(164,78,224,0.3)', 0.6);
-    toast('벽의 상처가 입을 벌린다. 보라빛이 새어 나온다.');
+    toast('상처가 입을 벌린다. 보랏빛이 새어 나온다.');
+  }
+  // 깨우지 않고 맨몸으로 손대면 — 그것이 문다 (서브 루트: 그 대가로 '깨우기'를 깨닫는다)
+  function biteRift() {
+    const w = game.world;
+    BK.audio.stingShort(); BK.fx.addShake(3); BK.fx.flash('rgba(160,30,40,0.32)', 0.5);
+    game.sanity = Math.max(1, game.sanity - 8);
+    w.exitBit = true;
+    toast('상처에 손을 넣자 — 그것이 문다! 손을 뺀다. 피가 맺힌다.');
+    if (!w.exitWakeKnown) {
+      learnExitMethod('wake');
+      setTimeout(() => { if (game.state === 'play') toast('…억지로는 안 된다. 먼저 뭔가로 쳐서 깨운 다음에 벌려야 하는 건가.'); }, 1400);
+    }
   }
 
   function checkQuest() {
@@ -718,6 +1021,18 @@
     if (game.msgs.length > 3) game.msgs.shift();
   }
 
+  // 정적을 무기로 — 큰 한 방(조명 소멸·점프스케어) 직전, 앰비언스/음악 베드를 완전히
+  // 죽이고 '공백'을 둔 뒤 친다. 정적 뒤의 충격이 훨씬 세게 박힌다. 드물게만 써야 효과가 산다.
+  function strikeAfterSilence(hold, fn) {
+    const z0 = game.zoneIdx;
+    game.silenceT = hold + 0.2;        // 이 동안 환경음 스케줄러·분위기 멘트를 멈춘다
+    BK.audio.duck(0, hold, 0.35);      // 지속 베드(드론·음악·이명)도 0으로 — 진짜 침묵
+    const tm = setTimeout(() => {
+      if (game.state === 'play' && game.zoneIdx === z0) fn();
+    }, hold * 1000);
+    game.fxTimers.push(tm);
+  }
+
   function onSpotted(mon) {
     const nm = mon ? MON_NAME[mon.kind] : '그것';
     if (mon && mon.kind === 'clown') {
@@ -740,8 +1055,16 @@
       game.loreSeen.add(mon.kind);
       setTimeout(() => { if (game.state === 'play') toast(`[${nm}] ${MON_LORE[mon.kind].tag}`); }, 1100);
     }
-    // L0: 그것이 나타난 끝에서 균열이 보인다 — 괴물이 출구를 알려 준다
-    if (game.zoneIdx === 0) knowExitLocation('그것이 나타난 저 끝 — 벽이 보라빛으로 곪아 있다. 저게 나가는 길인가.');
+    // 처음으로 추격당하면 생존 동사를 한 번 일러 준다 (조작 재안내)
+    if (!game.combatHintShown) {
+      game.combatHintShown = true;
+      setTimeout(() => { if (game.state === 'play') toast('[조작] Q 돌 던져 유인 · E 사물함에 숨기 · Shift 달리기'); }, 2300);
+    }
+    // L0: 그것이 나타난 끝에서 균열이 보인다 — 괴물이 출구 위치 + '깨우기' 힌트를 흘린다
+    if (game.zoneIdx === 0) {
+      knowExitLocation('그것이 나타난 저 끝 — 벽이 보랏빛으로 곪아 있다. 저게 나가는 길인가.');
+      learnExitMethod('wake', '그것이 지나며 벽의 상처를 긁자 — 상처가 꿈틀했다. 충격에 반응하는 건가.');
+    }
   }
 
   function catchPlayer(mon) {
@@ -777,6 +1100,7 @@
       }
       game.jumpCracks.push(segs);
     }
+    BK.audio.duck(0.04, 0.02, 0.5); // 숨 멎는 정적 — 비명이 그 위로 터진다
     BK.audio.scream();
     BK.fx.addShake(10);
   }
@@ -816,12 +1140,32 @@
     if (p.hidden) { p.hidden = false; game.peekT = 0; BK.audio.lockerMove(); return; }
     const it = game.nearInteract;
     if (!it) return;
-    if (it.kind === 'exit') { // L0 휴면 균열
-      if (!game.world.exitOpenKnown) {
-        toast('벽의 상처에서 찬 바람이 샌다. …어떻게 여는지 모르겠다. 단서가 더 필요하다.');
+    if (it.kind === 'exit') { // L0 균열 — 깨우고(돌) → 벌린다(E)
+      const w0 = game.world, ex = w0.exit;
+      if (ex.awakeT > 0) { openRift(); return; } // 깨어난 찰나 → 벌리면 열린다
+      if (w0.exitWakeKnown || w0.exitMethodSure) {
+        // 깨우는 법은 안다 → 물지 않고 일러만 준다
+        toast(w0.exitPryKnown || w0.exitMethodSure
+          ? '상처가 닫혀 있다 — 돌(Q)을 던져 깨운 뒤, 꿈틀하는 찰나에 벌려라.'
+          : '상처가 단단하다 — 먼저 돌(Q)을 던져 깨워야 할 것 같다.');
         return;
       }
-      openRift();
+      if (w0.exitLocKnown) { biteRift(); return; } // 위치는 알지만 방법 모름 → 맨몸 시도 → 물림
+      // 위치조차 확신 못한 채 두드림 — 이스터에그(저편의 응답)
+      w0.exitKnocks = (w0.exitKnocks || 0) + 1;
+      if (w0.exitKnocks >= 10) {
+        w0.exitKnocks = 6;
+        BK.audio.duck(0.08, 0.25, 0.9); BK.audio.whisper(); BK.audio.brotherCall(0);
+        BK.fx.addShake(2.5);
+        toast('"…형, 그만 두드려. 여기, 너 말고도 많아." …내 목소리였다.');
+        game.sanity = Math.max(1, game.sanity - 3);
+      } else if (w0.exitKnocks === 5) {
+        BK.audio.duck(0.1, 0.3, 0.8); BK.audio.thud(); BK.fx.addShake(3);
+        toast('상처 너머에서 — 똑. 똑. 무언가가 마주 두드렸다.');
+        game.sanity = Math.max(1, game.sanity - 4);
+      } else {
+        toast('벽의 상처에서 찬 바람이 샌다. …어떻게 여는지 모르겠다. 단서가 더 필요하다.');
+      }
       return;
     }
     if (it.want !== undefined) { // 아이 영혼
@@ -886,9 +1230,22 @@
   function turnOnPower() {
     game.powerOn = true;
     BK.audio.generatorStart();
-    BK.fx.flash('rgba(220,235,255,0.45)', 0.7);
-    BK.fx.addShake(2.5);
-    toast('발전기가 깨어난다 — 불이 들어온다.');
+    BK.fx.flash('rgba(230,242,255,0.6)', 0.9);
+    BK.fx.addShake(3.5);
+    toast('발전기가 깨어난다 — 불이 일제히 쏟아진다.');
+    // 빛이 한꺼번에 쏟아지자 어둠에 있던 '꺼진 것'이 그 자리에 영영 굳는다 (석화를 메인 클라이맥스로 승격)
+    let caught = 0;
+    for (const m of game.monsters) {
+      if (m.kind === 'shade' && m.active && !m.petrified) {
+        m.petrified = true; m.frozen = true; m.shadeAggro = false; m._subToasted = true; caught++;
+      }
+    }
+    if (caught) {
+      BK.audio.shadeFreeze(0);
+      setTimeout(() => { if (game.state === 'play') toast('쏟아진 빛 속에서 잿빛 것이 굳어 버린다 — 그 자리에, 영영. …데일이었을지도.'); }, 800);
+    }
+    // 죽어 있던 기계가 깨어나, 컨베이어가 무언가를 나르기 시작한다 (안도 끝의 새 불안)
+    setTimeout(() => { if (game.state === 'play') toast('멈춰 있던 컨베이어가 덜컹, 다시 돈다 — 천에 싸인 무언가를 싣고.'); }, 2400);
     checkQuest(); // 엘리베이터 포털 개방
   }
 
@@ -901,6 +1258,13 @@
     BK.audio.purify();
     BK.fx.flash('rgba(220,230,255,0.3)', 0.5);
     toast(SPIRIT_LINES[s.want]);
+    if (s.hidden4) {
+      // 숨은 네 번째 아이 — 메인과 무관한 보너스. 엔딩에 작별 한 줄이 더해진다.
+      game.world.fourthFreed = true;
+      game.sanity = Math.min(100, game.sanity + 8);
+      setTimeout(() => { if (game.state === 'play') toast('울지 않아 아무도 못 찾던 아이를, 네가 찾았다.'); }, 1500);
+      return;
+    }
     if (s.isBrother) {
       // 2차 반전 — 캠코더 증거
       setTimeout(() => { if (game.state === 'play') showCamcorderReveal(); }, 1400);
@@ -914,8 +1278,8 @@
     if (game.state !== 'play') return;
     BK.audio.sting();
     runCards([
-      { html: `<div class="box"><div class="t-pre">발견 · 낡은 캠코더</div><p class="end-story" style="font-size:16px">화면이 지직거리며 켜진다.<br>놀이터, 노란 우비를 입은 아이. 그 옆에 — 휴대폰을 보는 당신.<br><br>아이가 바닥으로 가라앉는다. 당신은 1초 늦게 고개를 든다.<br><span style="color:#c84a3a">"형, 왜 손을 놨어?"</span></p></div>`, ms: 5200 },
-      { html: `<div class="box"><p class="end-story" style="font-size:17px">동생은 환영이 아니었다. 미쳐가던 네 머리가 지어낸 것도 아니었다.<br>정말 여기 있었다 — 그리고 네가 손을 놓은 그날, 여기서 죽었다.<br><br>너는 구하러 온 게 아니다. 이미 늦었으니까.<br><b>놓아주러</b> 온 것이다. 그리고 이제, 마지막 손을 놓을 때다.</p></div>`, ms: 5000 },
+      { html: `<div class="box"><div class="t-pre">발견 · 낡은 캠코더</div><p class="end-story" style="font-size:16px">화면이 지직거리며 켜진다.<br>실내 놀이방. 풍선. 생일 모자. 등 뒤 현수막엔 — <b style="color:#e8d49a">생일 축하해, ${BRO_NAME}</b>.<br>노란 우비를 입은 아이가 매트 위에서 손을 흔든다. 그 옆에, 휴대폰을 내려다보는 당신.<br><br>노란 매트가 물처럼 꺼진다. 아이가 가라앉는다. 당신은 1초 늦게 고개를 든다.<br><span style="color:#c84a3a">"형, 왜 손을 놨어?"</span></p></div>`, ms: 5600 },
+      { html: `<div class="box"><p class="end-story" style="font-size:17px">…${BRO_NAME}. 그 애 이름은 ${BRO_NAME}였다.<br>이름이 돌아오자, 그날의 냄새까지 한꺼번에 돌아온다. 크레용, 케이크, 젖은 매트.<br>동생은 환영도, 이곳이 빚은 미끼도 아니었다.<br>정말 여기로 떨어졌고 — 당신이 다시 잡으려던 손은, 이미 식어 있었다.<br><br>구하러 온 것이 아니었다. 늦었다는 걸 알면서도 계속 들어왔다.<br>이번엔 <b>놓아주러</b>. 마지막 손을 놓으러.</p></div>`, ms: 5600 },
     ], () => {
       game.state = 'play';
       checkQuest(); // 동생이 마지막이었다면 문 개방
@@ -925,9 +1289,52 @@
     });
   }
 
+  // ===== 비밀 엔딩: 동생을 깨뜨리다 =====
+  // 던진 돌이 동생 영혼에 맞을 때마다 금이 간다. 세 번이면 산산조각.
+  // 매 타격: 모든 괴물 소집 + 정신력 폭락 + 동생의 애원 → 멈추기 어렵게(존나 어렵게).
+  function hitBrother(s, pan) {
+    if (s.shattered) return;
+    s.cracks = (s.cracks || 0) + 1;
+    BK.audio.stoneCrack(pan);
+    BK.audio.duck(0.1, 0.07, 0.5);
+    BK.fx.flash('rgba(180,40,30,0.42)', 0.6);
+    BK.fx.addShake(4.5);
+    game.spiritFx = { x: s.x, y: s.y, t: 0.6, shatter: true };
+    game.sanity = Math.max(1, game.sanity - 16);
+    // 비명처럼 — 모든 괴물이 이 자리로 몰려온다 (가만히 서서 던지면 위험)
+    const pt = { x: Math.floor(s.x / T), y: Math.floor(s.y / T) };
+    for (const m of game.monsters) {
+      if (!m.active) continue;
+      m.state = 'hunt'; m.lostT = 0; m.huntT = 0;
+      m.lastSeen = { x: pt.x, y: pt.y }; m.path = []; m.repathT = 0;
+    }
+    if (s.cracks >= 3) { shatterBrother(s); return; }
+    toast(BRO_PLEAD[BK.clamp(s.cracks - 1, 0, BRO_PLEAD.length - 1)]);
+    if (s.cracks === 1) {
+      setTimeout(() => { if (game.state === 'play') toast('…멈춰야 한다. 그런데 손이, 멈추질 않는다.'); }, 1500);
+    }
+  }
+
+  // 세 번째 금 — 동생이 돌처럼 부서진다. 충격적 막간 후 다른 엔딩.
+  function shatterBrother(s) {
+    s.shattered = true; s.freed = true;
+    game.carrying = null;
+    game.state = 'cut'; // 산산조각 동안 잠깐 멈춤 (이 사이엔 잡히지 않는다)
+    game.spiritFx = { x: s.x, y: s.y, t: 2.0, shatter: true };
+    BK.audio.duck(0.04, 0.5, 1.3);
+    BK.audio.spiritShatter();
+    BK.audio.boneCrack();
+    BK.fx.flash('rgba(220,40,30,0.55)', 0.95);
+    BK.fx.addShake(9);
+    BK.audio.setChase(0, 0); BK.audio.setDread(0); BK.audio.setTension(0);
+    toast('잿빛 조각들이 카펫 위로 흩어진다. 노란 우비 한 조각만 남고.');
+    setTimeout(() => { if (game.state === 'cut') showShatterEnd(); }, 1900);
+  }
+
   // 우는 아이의 비명: 기절 + 정신력 폭락 + 모든 괴물 소집
   function childScream(mon) {
     if (game.state !== 'play') return;
+    BK.audio.duck(0.05, 0.03, 0.7); // 비명 직전의 공백
     BK.audio.childScream();
     BK.fx.flash('rgba(255,240,235,0.55)', 0.9);
     BK.fx.addShake(6);
@@ -991,12 +1398,14 @@
     if (game.flickerT > 0) game.flickerT -= dt;
     if (game.lightsOutT > 0) game.lightsOutT -= dt;
     if (game.faceFlashT > 0) game.faceFlashT -= dt;
+    if (game.silenceT > 0) game.silenceT -= dt;
+    if (game.peripheralCD > 0) game.peripheralCD -= dt;
     game.faceCD -= dt;
     for (const m of game.msgs) m.t -= dt;
     game.msgs = game.msgs.filter((m) => m.t > 0);
     if (BK.audio.started) BK.audio.tick();
 
-    if (game.state === 'title') {
+    if (game.state === 'title' || game.state === 'customize') {
       if (game.world) {
         game.cam.x = Math.cos(game.time * 0.07) * 220 - VW / 2;
         game.cam.y = Math.sin(game.time * 0.05) * 220 - VH / 2;
@@ -1017,8 +1426,42 @@
     const p = game.player, w = game.world;
     const cfg = w.cfg;
 
+    // L0 균열의 '깨어난 창' — 돌로 깨운 뒤 벌릴 수 있는 짧은 시간
+    if (w.exit && w.exit.awakeT > 0) {
+      w.exit.awakeT -= dt;
+      if (w.exit.awakeT <= 0 && w.exitLocKnown) toast('상처가 다시 다물렸다 — 다시 깨워야 한다.');
+    }
+
     p.update(dt, inputVec(), w);
     for (const m of game.monsters) if (m.active) m.update(dt, w, p, game);
+    // 서브 루트 알림 — 발견 가능성을 위해 '진행 중' 피드백 + 완료 알림
+    for (const m of game.monsters) {
+      // 꺼진 것: 석화가 절반쯤 진행되면 한 번 일러 준다(계속 비추라고)
+      if (m.kind === 'shade' && !m.petrified && !m._petrifyHint && m.petrifyT > 1.6) {
+        m._petrifyHint = true;
+        toast('꺼진 것이 빛 속에서 더 깊이 굳는다 — 계속 비추면 영영 멈출 것 같다.');
+      }
+      // 광대: 벽에 박을 때마다(소진 전) 진행을 알려 준다
+      if (m.kind === 'clown' && m.state !== 'down' && (m.crashes || 0) > (m._crashSeen || 0)) {
+        m._crashSeen = m.crashes;
+        if (m.crashes < 3) toast(m.crashes === 1
+          ? '광대가 헛돌진해 벽에 박곤 휘청인다 — 옆으로 피해 또 박게 하면?'
+          : '광대가 다시 벽을 들이받는다. 숨이 가빠 보인다 — 한 번 더.');
+      }
+      if (m._subToasted) continue;
+      if (m.kind === 'shade' && m.petrified) {
+        m._subToasted = true;
+        toast(game.shadePetrifiedOnce ? '또 하나가 빛 속에서 영영 굳었다.'
+          : '빛이 그것을 끝까지 굳혔다 — 이제 석상이다. 먼저 온 누군가가, 마침내 멈췄다.');
+        game.shadePetrifiedOnce = true;
+      } else if (m.kind === 'clown' && m.state === 'down') {
+        m._subToasted = true;
+        BK.audio.thud(); BK.fx.addShake(2);
+        toast(game.clownDownOnce ? '광대가 또 주저앉는다. 더는 일어나지 않는다.'
+          : '광대가 세 번째로 벽을 들이받곤 — 무릎을 꺾고 주저앉는다. 잃은 아이를 영영 못 찾은 채.');
+        game.clownDownOnce = true;
+      }
+    }
 
     // 카메라 추적 (무한 맵 — 클램프 없음)
     const k = 1 - Math.exp(-8 * dt);
@@ -1054,11 +1497,47 @@
         } else {
           game.lure = { x: pj.x, y: pj.y, t: 4.5, fresh: true };
           BK.audio.rockLand(pan);
+          // L0: 던진 돌이 균열에 맞으면 — 상처가 깨어난다(벌릴 수 있는 창). 우연이어도 정체를 깨닫는다.
+          if (game.zoneIdx === 0 && w.exit && !w.exit.opened &&
+              Math.hypot(w.exit.x - pj.x, w.exit.y - pj.y) < 22) {
+            w.exit.awakeT = 5;
+            BK.audio.buzz(); BK.fx.addShake(2); BK.fx.flash('rgba(164,78,224,0.28)', 0.5);
+            if (w.exitPryKnown || w.exitMethodSure) toast('돌이 상처를 때리자 — 꿈틀, 벌어지려 한다. 지금이다 — 손을 넣어 벌려라(E)!');
+            else if (w.exitWakeKnown) toast('상처가 반응했다 — 꿈틀거린다. 지금 뭔가 해야 할 것 같다(E).');
+            else { knowExitLocation('던진 돌이 벽의 상처에 맞자 — 지직, 꿈틀. 이게… 깨우는 건가.'); learnExitMethod('wake'); }
+          }
+          // L2: 던진 돌이 '애원하는 변이 시신'에 맞으면 — 끝내 준다(자비). 굳기 전에.
+          if (game.zoneIdx === 1) {
+            for (const ch of chunksAroundPlayer(1)) {
+              for (const pr of ch.props) {
+                if (pr.kind === 'corpse' && pr.begging && !pr.ended &&
+                    Math.hypot(pr.x - pj.x, pr.y - pj.y) < 16) {
+                  pr.ended = true; pr.begging = false; pr.turning = false; pr.faceShown = false;
+                  BK.audio.stoneCrack(pan); BK.fx.addShake(2.5); BK.fx.flash('rgba(120,120,130,0.3)', 0.5);
+                  game.sanity = Math.max(1, game.sanity - 3);
+                  toast('돌이 굳어 가던 것을 끝낸다. "…고마, 워." 잿빛으로 조용히 부서진다.');
+                  break;
+                }
+              }
+            }
+          }
         }
         game.projectile = null;
       } else {
         pj.x = nx; pj.y = ny;
         pj.vx *= (1 - 0.6 * dt); pj.vy *= (1 - 0.6 * dt);
+        // 비밀 경로: 던진 돌이 동생 영혼에 명중하면 금이 간다 (놀이방 전용)
+        // 비밀 경로는 '금단의 속삭임'(거짓 자비)을 한 번 들은 뒤에만 무장된다.
+        // → 괴물 유인용으로 던진 돌이 동생을 '실수로' 깨뜨리는 사고를 막는다.
+        if (pj.type === 'rock' && game.zoneIdx === 2 && game.forbiddenSeen && w.spirits) {
+          for (const s of w.spirits) {
+            if (s.isBrother && !s.freed && !s.shattered && Math.hypot(s.x - pj.x, s.y - pj.y) < 14) {
+              hitBrother(s, BK.clamp((pj.x - p.x) / 240, -1, 1));
+              game.projectile = null;
+              break;
+            }
+          }
+        }
       }
     }
     if (game.lure) {
@@ -1187,7 +1666,7 @@
 
     // 아이 영혼 — 부유 + 방치 시 흐느낌(광대를 부른다)
     if (w.spirits) for (const s of w.spirits) {
-      if (s.freed) continue;
+      if (s.freed || s.hidden4) continue; // 숨은 아이는 울지 않는다(미끼 아님)
       s.cryT -= dt;
       if (s.cryT <= 0) {
         s.cryT = 7 + Math.random() * 5;
@@ -1198,6 +1677,36 @@
     }
     if (game.spiritFx) { game.spiritFx.t -= dt; if (game.spiritFx.t <= 0) game.spiritFx = null; }
     if (game.almondSplash) { game.almondSplash.t -= dt; if (game.almondSplash.t <= 0) game.almondSplash = null; }
+
+    // 이스터에그/비밀 엔딩 유도 — 동생 곁에서 정신력이 낮을 때 떠오르는 '거짓 자비'
+    if (game.zoneIdx === 2 && w.spirits) {
+      game.forbidT -= dt;
+      if (game.forbidT <= 0) {
+        game.forbidT = 9 + Math.random() * 7;
+        const b = w.spirits.find((s) => s.isBrother && !s.freed && !s.shattered);
+        if (b && game.sanity < 60 && game.throwables > 0 && b.cracks === 0 &&
+            Math.hypot(b.x - p.x, b.y - p.y) < 80) {
+          BK.audio.whisper();
+          toast(FORBIDDEN_MSGS[(Math.random() * FORBIDDEN_MSGS.length) | 0]);
+          game.sanity = Math.max(1, game.sanity - 2);
+          game.forbiddenSeen = true; // 이 '거짓 자비'를 한 번 들은 뒤에야 돌이 동생에게 닿는다
+        }
+      }
+      // 엔딩 "같이 남다" (매우 어려운 숨은 조건) — 이번 런에 아몬드 워터를 한 번도 안 마시고(명료를
+      // 끝까지 거부) 정신력이 바닥인 채, 동생의 유물을 들고 그 곁에서 '보내지 않고 가만히' 머물면 —
+      // 차마 못 놓고 그 곁에 주저앉아 '먼저 온 우리'가 된다. (놓아주는 건 행동, 남는 건 항복)
+      const bro = w.spirits.find((s) => s.isBrother && !s.freed && !s.shattered);
+      const stayElig = bro && game.drank === 0 && game.sanity < 30 && game.carrying === 'gear';
+      if (stayElig && !p.moving && !p.hidden && Math.hypot(bro.x - p.x, bro.y - p.y) < 20) {
+        game.clingT += dt;
+        if (game.clingStage < 1 && game.clingT > 1.0) { game.clingStage = 1; BK.audio.whisper(); toast('(보내지 마. 그냥… 여기 같이 있어.)'); }
+        if (game.clingStage < 2 && game.clingT > 3.0) { game.clingStage = 2; BK.audio.whisper(); BK.fx.addShake(1.5); toast('(다리에 힘이 빠진다. 더는 안 찾아도 돼. 여기, 그 애 옆에.)'); }
+        if (game.clingT > 5.5) { stayEnding(bro); return; }
+      } else if (game.clingT > 0) {
+        game.clingT = Math.max(0, game.clingT - dt * 2.5); // 움직이거나 멀어지면 빠르게 식는다
+        if (game.clingT === 0) game.clingStage = 0;
+      }
+    }
 
     // 추격/이벤트 조명 연출 강도
     const chaseTarget = (anyAggro ? BK.clamp(1 - aggroD / 320, 0.35, 1) : 0);
@@ -1212,11 +1721,12 @@
     for (const it of w.items) {
       if (it.got || Math.hypot(it.x - p.x, it.y - p.y) >= 10) continue;
       if (it.kind === 'note') {
+        const noteIdx = nextNoteIdxForZone();
         it.got = true;
         game.notesRead++;
         game.sanity = Math.min(100, game.sanity + 5);
         BK.audio.pickup();
-        showNote(it.noteIdx);
+        showNote(noteIdx);
         return;
       }
       if (it.kind === 'relic') {
@@ -1260,6 +1770,11 @@
       portalTouched(w.portal.kind);
       return;
     }
+    // 서브 루트(L2): 비상 해치 도달 — 발전기 없이도 빠져나간다
+    if (w.hatch && Math.hypot(w.hatch.x - p.x, w.hatch.y - p.y) < 13) {
+      portalTouched('hatch');
+      return;
+    }
 
     // 벽 낙서 / 마네킹 / 시체 반응
     for (const ch of chunksAroundPlayer(1)) {
@@ -1268,12 +1783,19 @@
         const pd = Math.hypot(pr.x - p.x, pr.y - p.y);
         if (pr.kind === 'writing' && !pr.read && pd < 30) {
           pr.read = true;
-          // 기계실에선 절반쯤 '괴물=먼저 온 우리' 낙서가 섞인다
-          const wpool = (game.zoneIdx === 1 && Math.random() < 0.6) ? WRITING_MSGS_L1 : WRITING_MSGS;
+          const wpool = writingPoolForZone();
           pr.msg = wpool[(Math.random() * wpool.length) | 0];
           toast(`벽에 긁힌 글씨: "${pr.msg}"`);
           BK.audio.whisper();
           game.sanity = Math.max(0, game.sanity - 2);
+        }
+        // 크레용 벽화 — 아이들이 그린 그림(놀이방). 가까이 가면 그 장면이 읽힌다.
+        if (pr.kind === 'mural' && !pr.read && pd < 30) {
+          pr.read = true;
+          toast(MURAL_PANELS[BK.clamp(pr.panel, 0, MURAL_PANELS.length - 1)]);
+          BK.audio.whisper();
+          game.sanity = Math.max(0, game.sanity - (pr.leo ? 5 : 2));
+          if (pr.leo) { BK.fx.addShake(2); BK.audio.brotherCall(0); }
         }
         if (pr.kind === 'mannequin' && !pr.noticed && pd < 80 && game.onScreen(pr.x, pr.y, 0)) {
           pr.noticed = true;
@@ -1282,7 +1804,17 @@
         // 시체: 조사하면 메모(괴물 정보/약점/출구 단서). 일부(scare)는 움찔하며 눈코입이 솟는다.
         if (pr.kind === 'corpse' && !pr.read && pd < 22) {
           pr.read = true;
-          if (pr.turning) {
+          if (pr.turning && pr.begging && !pr.ended) {
+            // 반쯤 사람인 채 애원한다 — 외면(그냥 떠남)할지, 끝내 줄지(Q로 돌). 동생 테마의 예행연습.
+            BK.audio.whisper(); BK.fx.addShake(1.5);
+            game.sanity = Math.max(0, game.sanity - 4);
+            toast(pickBeggingMemo(pr));
+            game.loreRead++;
+            if (!game.beggedSeen) {
+              game.beggedSeen = true;
+              setTimeout(() => { if (game.state === 'play') toast('…돌이라도 던져 끝내 줄 수 있을 것 같다. 아니면, 그냥 두고 갈 수도.'); }, 1600);
+            }
+          } else if (pr.turning) {
             // 변해가는 시신 — 절반은 사람, 절반은 잿빛 돌. 설명 대신 정황만 보여 준다.
             BK.audio.whisper();
             game.sanity = Math.max(0, game.sanity - 3);
@@ -1302,7 +1834,8 @@
             const memo = pickCorpseMemo(pr);
             toast(`죽은 이의 메모 — "${memo.t}"`);
             game.loreRead++;
-            if (memo.exit) { knowExitLocation('메모가 가리킨다 — 벽이 보라빛으로 곪은 곳. 거기가 출구다.'); addExitMethodClue('메모 끝에 갈겨 쓴 한 줄 — "상처에 손을 대고 비틀어라."'); }
+            if (memo.exit) { knowExitLocation('메모가 가리킨다 — 벽이 보랏빛으로 곪은 곳. 거기가 출구다.'); learnExitMethod('pry', '메모 끝에 갈겨 쓴 한 줄 — "벌리려다 물렸다. 깨운 다음에, 꿈틀하는 그 찰나에 빠르게 벌려야 해."'); }
+            if (memo.hatch) knowHatch();
           } else {
             BK.audio.whisper();
             game.sanity = Math.max(0, game.sanity - 2);
@@ -1310,7 +1843,8 @@
             const memo = pickCorpseMemo(pr);
             toast(`죽은 이의 메모 — "${memo.t}"`);
             game.loreRead++;
-            if (memo.exit) { knowExitLocation('메모가 가리킨다 — 벽이 보라빛으로 곪은 곳. 거기가 출구다.'); addExitMethodClue('메모 끝에 갈겨 쓴 한 줄 — "상처에 손을 대고 비틀어라."'); }
+            if (memo.exit) { knowExitLocation('메모가 가리킨다 — 벽이 보랏빛으로 곪은 곳. 거기가 출구다.'); learnExitMethod('pry', '메모 끝에 갈겨 쓴 한 줄 — "벌리려다 물렸다. 깨운 다음에, 꿈틀하는 그 찰나에 빠르게 벌려야 해."'); }
+            if (memo.hatch) knowHatch();
           }
         }
       }
@@ -1355,6 +1889,18 @@
     if (game.stalker) crisis = Math.max(crisis, game.stalker.app * 0.6);
     BK.audio.setCrisis(crisis);
 
+    // 패닉 호흡 — 정신력이 낮거나(공황) 위협이 코앞일수록 들숨/날숨이 가빠진다
+    let panic = BK.clamp((52 - game.sanity) / 52, 0, 1);
+    if (nearM && nearD < 160) panic = Math.max(panic, BK.clamp(1 - nearD / 160, 0, 1) * (anyAggro ? 1 : 0.55));
+    if (game.finale) panic = Math.max(panic, 0.7);
+    if (panic > 0.12 && !game.player.hidden) {
+      game.breathT -= dt;
+      if (game.breathT <= 0) {
+        BK.audio.panicBreath(panic);
+        game.breathT = BK.lerp(3.4, 1.0, panic); // 무서울수록 잦게
+      }
+    } else if (game.breathT < 1.2) game.breathT = 1.2;
+
     if (w.portal) {
       const xd = Math.hypot(w.portal.x - p.x, w.portal.y - p.y);
       const v = BK.clamp(1 - xd / 560, 0, 1);
@@ -1375,8 +1921,10 @@
     game.flavorT -= dt;
     if (game.flavorT <= 0) {
       game.flavorT = 22 + Math.random() * 20;
-      const pool = FLAVOR[game.zoneIdx];
-      toast(pool[(Math.random() * pool.length) | 0]);
+      if (game.silenceT <= 0) { // 정적 창에선 분위기 멘트도 띄우지 않는다
+        const pool = FLAVOR[game.zoneIdx];
+        toast(pool[(Math.random() * pool.length) | 0]);
+      }
     }
 
     // 기계실 상시 박동
@@ -1386,10 +1934,12 @@
     }
 
     // 앰비언스 스케줄러 — 끊임없는 환경/원거리 사운드로 긴장 유지
+    // 긴장이 높거나 정신력이 낮으면 더 촘촘히 깔려 압박을 키운다
     game.ambT -= dt;
     if (game.ambT <= 0) {
-      game.ambT = 2.2 + Math.random() * 3.0;
-      playAmbient();
+      const dense = Math.max(tension, BK.clamp((45 - game.sanity) / 45, 0, 1), game.finale ? 0.8 : 0);
+      game.ambT = BK.lerp(2.2, 0.9, dense) + Math.random() * BK.lerp(3.0, 1.2, dense);
+      if (game.silenceT <= 0) playAmbient(); // 정적 창에선 환경음을 깔지 않는다
     }
 
     // 감각 핑
@@ -1405,9 +1955,22 @@
       }
     }
 
-    // 환경 공포 이벤트
-    game.eventT -= dt;
-    if (game.eventT <= 0) { game.eventT = 12 + Math.random() * 16; fireEvent(); }
+    // 환경 공포 이벤트 — 공포 디렉터: 평평한 타이머 대신 긴장(heat) 곡선.
+    // 안전할수록 빨리 차오르고, 큰 한 방 직후엔 음수 골짜기로 떨어져 '강제 정적'을 만든다(대비).
+    {
+      const threat = anyAggro ? 1 : (nearM ? BK.clamp(1 - nearD / 240, 0, 1) : 0);
+      let rise = BK.lerp(0.17, 0.045, threat);  // 안전하면 빨리, 위협이 코앞이면 느리게(괴물이 곧 긴장)
+      rise *= BK.lerp(0.8, 1.5, BK.clamp((70 - game.sanity) / 70, 0, 1)); // 정신력 낮을수록 가속
+      if (game.finale) rise *= 1.5;
+      if (game.silenceT > 0) rise = 0;          // 정적 창 동안은 멈춤
+      game.safeStreak = threat > 0.25 ? 0 : game.safeStreak + dt;
+      game.heat += dt * rise;
+      if (game.heat >= 1) {
+        const intensity = BK.clamp(game.safeStreak / 20, 0, 1); // 오래 평온했으면 더 센 걸 꺼낸다
+        game.heat = -(0.3 + Math.random() * 0.45);              // 골짜기 — 강제 정적/회복
+        fireEvent(intensity);
+      }
+    }
 
     // 환각/눈/도플갱어 수명
     for (const key of ['halluc', 'eyes', 'doppel']) {
@@ -1425,8 +1988,10 @@
       const P = BK.CHUNK_PX;
       return { x: w.portalPending.cx * P + P / 2, y: w.portalPending.cy * P + P / 2 };
     }
-    // L0: 균열 위치를 알면 그곳으로, 모르면 아래 기록 탐색으로 자연 안내
-    if (game.zoneIdx === 0 && w.exit && !w.exit.opened && w.exitLocKnown) {
+    // L0: 위치 + 여는 법의 한 단계라도 알면 균열로 안내. 둘 다 모르면
+    // 아래 기록/시신 탐색으로 자연 안내해 단서를 모으게 한다(열 수 없는 균열로만 끌고 가지 않음).
+    if (game.zoneIdx === 0 && w.exit && !w.exit.opened && w.exitLocKnown &&
+        (w.exitWakeKnown || w.exitPryKnown || w.exitMethodSure || w.exit.awakeT > 0)) {
       return { x: w.exit.x, y: w.exit.y };
     }
     // 퓨즈를 들고 있으면 분전반으로 안내
@@ -1451,38 +2016,48 @@
     return best;
   }
 
-  function fireEvent() {
+  function fireEvent(intensity) {
     const z = game.zoneIdx, s = game.sanity;
+    const I = intensity == null ? 0.4 : intensity;
+    const bigW = 0.4 + I * 1.3;   // 오래 평온했을수록(intensity↑) 큰 한 방 가중치↑
+    const lowW = 1.3 - I * 0.55;  // 잦은 '노이즈' 자극은 평온이 길수록 가중치↓
     const anyActive = game.monsters.some((m) => m.active);
     const pool = [];
     const add = (w2, fn) => pool.push([w2, fn]);
-    add(3, () => { game.flickerT = 2.4; BK.audio.buzz(); });
-    add(2, () => { BK.audio.thud(); BK.fx.addShake(1.6); });
+    // 주변 '깜빡' 비주얼 4종(눈·환영·도플갱어·벽의 얼굴)은 공유 쿨다운으로 묶는다.
+    // → 다양성(예측 불가)은 그대로 두고, 한 창에 몰려 터져 무뎌지는 것만 막는다.
+    const periphReady = game.peripheralCD <= 0;
+    const periphFired = () => { game.peripheralCD = 8 + Math.random() * 4; };
+    add(3 * lowW, () => { game.flickerT = 2.4; BK.audio.buzz(); });
+    add(2 * lowW, () => { BK.audio.thud(); BK.fx.addShake(1.6); });
     if (s < 80) add(2, () => BK.audio.whisper());
-    if (anyActive) add(1.6, () => {
+    if (anyActive) add(1.6 * bigW, () => strikeAfterSilence(1.6, () => {
+      // 1.6초의 죽은 공백 뒤 — 어둠이 일제히 떨어진다
       game.lightsOutT = 2.8;
-      BK.audio.buzz(); BK.audio.thud();
+      BK.audio.buzz(); BK.audio.thud(); BK.fx.addShake(2);
       toast('조명이 일제히 꺼졌다.');
-    });
-    if (s < 75) add(1.5, () => {
+    }));
+    if (s < 75 && periphReady) add(1.5, () => {
       const spot = BK.randomFloorNear(game.world, game.player.x, game.player.y, 85, 130, 25);
-      if (spot) { game.eyes = { x: spot.x, y: spot.y, t: 1.8 }; BK.audio.whisper(); }
+      if (spot) { game.eyes = { x: spot.x, y: spot.y, t: 1.8 }; BK.audio.whisper(); periphFired(); }
     });
-    if (s < 50) add(1.5, () => {
+    if (s < 50 && periphReady) add(1.5, () => {
       const spot = BK.randomFloorNear(game.world, game.player.x, game.player.y, 70, 105, 25);
-      if (spot) { game.halluc = { x: spot.x, y: spot.y, t: 0.22 }; BK.audio.whisper(); }
+      if (spot) { game.halluc = { x: spot.x, y: spot.y, t: 0.22 }; BK.audio.whisper(); periphFired(); }
     });
-    if (s < 60 && game.faceCD <= 0) add(0.9, () => {
-      game.faceCD = 40 + Math.random() * 28;
-      game.faceFlashT = 0.14;
-      game.jumpMon = 'smiler';
-      BK.audio.stingShort();
-      BK.fx.addShake(3);
-      game.sanity = Math.max(1, game.sanity - 4);
+    if (s < 60 && game.faceCD <= 0) add(0.9 * bigW, () => {
+      game.faceCD = 40 + Math.random() * 28; // 즉시 쿨다운 (정적 동안 재발 방지)
+      strikeAfterSilence(1.3, () => {        // 1.3초 죽은 공백 → 얼굴이 번쩍 들이친다
+        game.faceFlashT = 0.14;
+        game.jumpMon = 'smiler';
+        BK.audio.stingShort();
+        BK.fx.addShake(3);
+        game.sanity = Math.max(1, game.sanity - 4);
+      });
     });
-    if (s < 55) add(1, () => {
+    if (s < 55 && periphReady) add(1, () => {
       const spot = BK.randomFloorNear(game.world, game.player.x, game.player.y, 75, 110, 25);
-      if (spot) { game.doppel = { x: spot.x, y: spot.y, t: 0.5 }; }
+      if (spot) { game.doppel = { x: spot.x, y: spot.y, t: 0.5 }; periphFired(); }
     });
     // 동생 목소리 환청 (거짓 희망) — 정신력 낮을수록 자주
     if (s < 72) add(1.6, () => {
@@ -1491,9 +2066,9 @@
       game.sanity = Math.max(1, game.sanity - 3);
     });
     // 벽의 얼굴
-    if (s < 55) add(1.3, () => {
+    if (s < 55 && periphReady) add(1.3, () => {
       const spot = BK.randomFloorNear(game.world, game.player.x, game.player.y, 40, 95, 30);
-      if (spot) { game.wallFaceFx = { x: spot.x, y: spot.y - 6, t: 1.6 }; BK.audio.whisper(); }
+      if (spot) { game.wallFaceFx = { x: spot.x, y: spot.y - 6, t: 1.6 }; BK.audio.whisper(); periphFired(); }
     });
     // 거짓 속삭임 (불신)
     if (s < 42) add(1.1, () => toast(FAKE_MSGS[(Math.random() * FAKE_MSGS.length) | 0]));
@@ -1558,8 +2133,15 @@
   function lightBright(l) {
     if (game.lightsOutT > 0) return 0;
     const t = game.time;
-    // 기계실 정전: 발전기 켜기 전엔 대부분 죽어 있고 가끔만 명멸
+    // 기계실 정전: 발전기 켜기 전엔 대부분 죽어 있다. 단, 퓨즈를 꽂을수록 '구역별'로 불이 돌아온다(부분 전력).
     if (game.zoneIdx === 1 && !game.powerOn) {
+      const inst = game.world.fusebox ? game.world.fusebox.installed : 0;
+      const tier = (BK.hash2(l.phase, 1.7, 3.3) * 3) | 0; // 등마다 0/1/2 구역
+      if (inst > tier) { // 이 구역은 들어왔다 — 정상보다 약간 약하게, 살짝 불안정
+        let pb = 0.5 + 0.2 * Math.sin(t * 1.3 + l.phase);
+        pb *= 0.82 + 0.18 * BK.hash2((t * 20) | 0, l.phase, 1.1);
+        return pb * 0.9;
+      }
       return BK.hash2((t * 2.5) | 0, l.phase, 6.1) > 0.9 ? 0.18 : 0.02;
     }
     let b = 0.72 + 0.22 * Math.sin(t * 1.3 + l.phase);
@@ -1645,7 +2227,7 @@
 
     // 3) 소품(바닥에 깔리는 낮은 것) + 아이템
     const ITEM_SPR = { note: A.note, fuse: A.fuse, gear: A.gear };
-    const RELIC_SPR = { teddy: A.teddy, balloon: A.balloon, gear: A.gear };
+    const RELIC_SPR = { teddy: A.teddy, balloon: A.balloon, gear: A.gear, music: A.gear };
     for (const ch of chunks) {
       for (const pr2 of ch.props) {
         const sx = pr2.x - cam.x, sy = pr2.y - cam.y;
@@ -1654,6 +2236,7 @@
         else if (pr2.kind === 'ball') bctx.drawImage(A.ball, Math.round(sx - 4), Math.round(sy - 7));
         else if (pr2.kind === 'blocks') bctx.drawImage(A.blocks, Math.round(sx - 5), Math.round(sy - 7));
         else if (pr2.kind === 'writing') bctx.drawImage(A.writings[pr2.v], Math.round(sx - 7), Math.round(sy - 12));
+        else if (pr2.kind === 'mural') bctx.drawImage(A.murals[pr2.leo ? 3 : Math.min(pr2.panel, 2)], Math.round(sx - 12), Math.round(sy - 16));
         else if (pr2.kind === 'corpse') {
           // 움찔 — 짧게 제자리에서 떨린다
           const tj = pr2.twitchT > 0 ? (Math.random() - 0.5) * 3 : 0;
@@ -1710,9 +2293,12 @@
     if (w.exit && !w.exit.opened) {
       const sx = w.exit.x - cam.x, sy = w.exit.y - cam.y;
       if (sx > -50 && sy > -50 && sx < VW + 50 && sy < VH + 50) {
-        const a = w.exitLocKnown ? 0.5 + 0.3 * Math.sin(game.time * 4) : 0.16;
+        const awake = w.exit.awakeT > 0;
+        const a = awake ? 0.75 + 0.25 * Math.sin(game.time * 16) // 깨어남 — 격하게 꿈틀
+          : (w.exitLocKnown ? 0.5 + 0.3 * Math.sin(game.time * 4) : 0.16);
+        const jx = awake ? (Math.random() - 0.5) * 3 : 0, jy = awake ? (Math.random() - 0.5) * 3 : 0;
         bctx.globalAlpha = a;
-        bctx.drawImage(A.rift[((game.time * (w.exitLocKnown ? 6 : 2)) | 0) % 4], Math.round(sx - 16), Math.round(sy - 16));
+        bctx.drawImage(A.rift[((game.time * (awake ? 14 : (w.exitLocKnown ? 6 : 2))) | 0) % 4], Math.round(sx - 16 + jx), Math.round(sy - 16 + jy));
         bctx.globalAlpha = 1;
       }
     }
@@ -1726,17 +2312,32 @@
         else bctx.drawImage(A.door, Math.round(sx - 11), Math.round(sy - 28));
       }
     }
+    // 서브 루트: 비상 해치 — 바닥의 어두운 금속 환풍구 (알면 희미한 빛)
+    if (w.hatch) {
+      const sx = Math.round(w.hatch.x - cam.x), sy = Math.round(w.hatch.y - cam.y);
+      if (sx > -20 && sy > -20 && sx < VW + 20 && sy < VH + 20) {
+        bctx.fillStyle = '#101216'; bctx.fillRect(sx - 9, sy - 7, 18, 14);
+        bctx.strokeStyle = '#2b3037'; bctx.lineWidth = 1;
+        bctx.strokeRect(sx - 9.5, sy - 7.5, 19, 15);
+        for (let i = -5; i <= 5; i += 3) { bctx.beginPath(); bctx.moveTo(sx + i, sy - 6); bctx.lineTo(sx + i, sy + 6); bctx.stroke(); }
+        if (w.hatchKnown) BK.fx.glow(bctx, sx, sy, 13, '120,180,210', 0.10 + 0.06 * Math.sin(game.time * 3));
+      }
+    }
 
     // 4) 액터 (y 정렬). 괴물은 빛 안에서만 보인다 → lightAt 알파
     const actors = [{ y: p.y, draw: () => p.draw(bctx, cam) }];
     for (const m of game.monsters) {
       if (!m.active) continue;
       const onScr = game.onScreen(m.x, m.y, 40);
+      // la = 플레이어 광원 포함 광량 → 꺼진 것의 '굳음' 판정에 쓰임 (다음 프레임 AI가 읽는다)
       const la = onScr ? lightAt(m.x, m.y, cam, visLights, pcut) : 0;
-      // 꺼진 것의 '굳음' 판정에 쓰임 (다음 프레임 AI가 읽는다)
       m._onScreen = onScr; m._litLevel = la;
       if (!onScr) continue;
-      actors.push({ y: m.y, draw: () => m.draw(bctx, cam, la) });
+      // 어둠에선 괴물이 보이지 않는다 — 형광등 빛 웅덩이 안에 들어와야만 드러난다(그 밖엔 소리로만 감지).
+      // 단, 꺼진 것(shade)은 '빛에 굳고 눈을 떼면 다가오는' 정체상 플레이어 광원에도 드러난다.
+      const visLa = m.kind === 'shade' ? la : lightAt(m.x, m.y, cam, visLights, null);
+      if (visLa <= 0.02) continue;
+      actors.push({ y: m.y, draw: () => m.draw(bctx, cam, visLa) });
     }
     // 키 큰 구조물/마네킹/괴인형 — y정렬에 포함
     const TALL = {
@@ -1796,7 +2397,7 @@
 
     // 5) 어둠 + 빛 컷아웃
     const cuts = [];
-    if (game.state !== 'title') {
+    if (game.state !== 'title' && game.state !== 'customize') {
       // 숨는 중에는 시야가 사물함 틈으로 좁아진다
       cuts.push({ x: pcut.x, y: pcut.y, r: game.player.hidden ? 24 : pcut.r, a: plamp });
     }
@@ -1808,8 +2409,12 @@
     if (w.portal) cuts.push({ x: w.portal.x - cam.x, y: w.portal.y - cam.y, r: 26 + Math.sin(game.time * 5) * 4, a: 0.9 });
     // 알고 있는 휴면 균열도 어둠 속에서 어렴풋이 빛난다
     if (w.exit && !w.exit.opened && w.exitLocKnown) cuts.push({ x: w.exit.x - cam.x, y: w.exit.y - cam.y, r: 20 + Math.sin(game.time * 4) * 3, a: 0.6 });
-    let darkA = game.state === 'title' ? 0.965 : cfg.dark;
-    if (game.zoneIdx === 1 && !game.powerOn) darkA = Math.min(0.985, darkA + 0.022); // 정전 — 발전기 켜기 전
+    if (w.hatch && w.hatchKnown) cuts.push({ x: w.hatch.x - cam.x, y: w.hatch.y - cam.y, r: 16 + Math.sin(game.time * 4) * 2, a: 0.5 });
+    let darkA = (game.state === 'title' || game.state === 'customize') ? 0.965 : cfg.dark;
+    if (game.zoneIdx === 1 && !game.powerOn) { // 정전 — 퓨즈를 꽂을수록 어둠이 옅어진다(부분 전력)
+      const inst = w.fusebox ? w.fusebox.installed : 0;
+      darkA = Math.min(0.985, darkA + 0.022 * (1 - inst / 3));
+    }
     if (game.lightsOutT > 0) darkA = 0.984;
     if (game.player.hidden) darkA = Math.max(darkA, 0.965);
     if (game.flickerT > 0) darkA += (BK.hash2((game.time * 13) | 0, 1, 2) - 0.5) * 0.04;
@@ -1820,18 +2425,35 @@
     // 아이 영혼 — 어둠 속에서도 은은히 빛난다
     if (w.spirits) for (const s of w.spirits) {
       if (s.freed) continue;
-      const sx = Math.round(s.x - cam.x), sy = Math.round(s.y - cam.y + Math.sin(game.time * 2 + s.bob) * 2);
+      const cracked = s.cracks > 0;
+      const jy = cracked ? (Math.random() - 0.5) * s.cracks * 1.3 : 0; // 금이 갈수록 떨린다
+      const sx = Math.round(s.x - cam.x), sy = Math.round(s.y - cam.y + Math.sin(game.time * 2 + s.bob) * 2 + jy);
       if (sx < -20 || sy < -24 || sx > VW + 20 || sy > VH + 24) continue;
-      const col = s.isBrother ? '230,210,120' : '180,212,236';
-      BK.fx.glow(bctx, sx, sy - 4, 15, col, 0.12);
-      bctx.globalAlpha = 0.5 + 0.22 * Math.sin(game.time * 3 + s.bob);
+      // 금이 갈수록 따뜻한 노랑 → 핏빛/잿빛으로 식어 간다
+      let col = s.isBrother ? '230,210,120' : '180,212,236';
+      if (cracked) col = ['230,210,120', '196,150,116', '156,120,118', '120,110,116'][BK.clamp(s.cracks, 0, 3)];
+      BK.fx.glow(bctx, sx, sy - 4, 15, col, cracked ? 0.12 + 0.06 * Math.sin(game.time * 12) : 0.12);
+      bctx.globalAlpha = (cracked ? 0.62 : 0.5) + 0.22 * Math.sin(game.time * (cracked ? 9 : 3) + s.bob);
       bctx.drawImage(s.isBrother ? A.spiritBro : A.spirit, sx - 7, sy - 12);
       bctx.globalAlpha = 1;
+      if (cracked) { // 표면을 가르는 검은 금
+        bctx.strokeStyle = `rgba(28,18,26,${0.5 + 0.16 * s.cracks})`;
+        bctx.lineWidth = 1;
+        for (let i = 0; i < s.cracks; i++) {
+          const a = i * 2.2 + s.bob;
+          bctx.beginPath();
+          bctx.moveTo(sx, sy - 6);
+          bctx.lineTo(sx + Math.cos(a) * 5, sy - 6 + Math.sin(a) * 6);
+          bctx.lineTo(sx + Math.cos(a) * 7 + 2, sy - 2 + Math.sin(a) * 7);
+          bctx.stroke();
+        }
+      }
     }
-    // 해방 반짝임
+    // 해방 반짝임 (정화=흰빛 / 파괴=핏빛)
     if (game.spiritFx) {
-      const f = game.spiritFx, a = BK.clamp(f.t / 1.6, 0, 1);
-      BK.fx.glow(bctx, f.x - cam.x, f.y - cam.y - 4, 34 * (1.5 - a), '230,240,255', 0.45 * a);
+      const f = game.spiritFx, a = BK.clamp(f.t / (f.shatter ? 1.0 : 1.6), 0, 1);
+      const col = f.shatter ? '235,70,45' : '230,240,255';
+      BK.fx.glow(bctx, f.x - cam.x, f.y - cam.y - 4, 34 * (1.5 - a), col, (f.shatter ? 0.6 : 0.45) * a);
     }
     // 아몬드 워터 물보라
     if (game.almondSplash) {
@@ -1994,11 +2616,13 @@
     dctx.fillText(`${cfg.name} — ${cfg.sub}`, canvas.width - 18, 14);
     dctx.fillStyle = '#d8cc8a';
     if (game.zoneIdx === 0) {
-      // L0: 수집이 아니라 '균열을 찾아 벌리기'가 목표. 위치/여는 법을 따로 안다.
-      const w0 = game.world;
+      // L0: 수집이 아니라 '균열을 찾아 깨우고 벌리기'가 목표. 위치/여는 법을 따로, 단계로 안다.
+      const w0 = game.world, ex0 = w0.exit;
       let obj;
-      if (w0.exit && w0.exit.opened) obj = '균열로 들어가라';
-      else if (w0.exitLocKnown && w0.exitOpenKnown) obj = '균열을 벌려라 →';
+      if (ex0 && ex0.opened) obj = '균열로 들어가라';
+      else if (ex0 && ex0.awakeT > 0) obj = '지금! 상처를 벌려라(E) →';
+      else if (w0.exitMethodSure) obj = '균열 → 돌로 깨우고, 벌려라';
+      else if (w0.exitLocKnown && (w0.exitWakeKnown || w0.exitPryKnown)) obj = '균열을 찾았다 — 여는 법을 맞춰 봐라';
       else if (w0.exitLocKnown) obj = '균열을 찾았다 — 여는 법은?';
       else obj = '빠져나갈 단서를 찾아라';
       dctx.fillText(obj, canvas.width - 18, 32);
@@ -2039,7 +2663,13 @@
         } else if (it.installed !== undefined) {
           prompt = game.fuseHeld > 0 ? `[E] 퓨즈 ${game.fuseHeld}개 꽂기` : `분전반 (${it.installed}/3) — 퓨즈가 필요하다`;
         } else if (it.kind === 'exit') {
-          prompt = game.world.exitOpenKnown ? '[E] 균열을 벌린다' : '[E] 벽의 상처 — 여는 법을 모른다';
+          {
+            const ex2 = game.world.exit;
+            if (ex2 && ex2.awakeT > 0) prompt = '[E] 벌어진 상처를 벌린다 — 지금!';
+            else if (game.world.exitWakeKnown || game.world.exitMethodSure) prompt = '[E] 상처 — 먼저 돌(Q)로 깨워라';
+            else if (game.world.exitLocKnown) prompt = '[E] 벽의 상처 — 손을 넣어 본다…?';
+            else prompt = '[E] 벽의 상처 — 여는 법을 모른다';
+          }
         } else if (it.kind === 'locker') prompt = '[E] 사물함에 숨기';
         else if (it.kind === 'door') prompt = it.closed ? '[E] 문 열기' : '[E] 문 닫기';
         else if (it.kind === 'pushcrate') prompt = '[E] 가구 밀기';
@@ -2064,8 +2694,11 @@
       } else if (w.portalPending) {
         const P = BK.CHUNK_PX;
         drawArrow(w.portalPending.cx * P + P / 2, w.portalPending.cy * P + P / 2, '#c084f0', 0.55 + 0.35 * Math.sin(game.time * 6));
-      } else if (w.exit && !w.exit.opened && w.exitLocKnown) {
-        drawArrow(w.exit.x, w.exit.y, '#c084f0', 0.55 + 0.35 * Math.sin(game.time * 6));
+      } else if (w.exit && !w.exit.opened && w.exitLocKnown &&
+                 (w.exitWakeKnown || w.exitPryKnown || w.exitMethodSure || w.exit.awakeT > 0)) {
+        drawArrow(w.exit.x, w.exit.y, w.exit.awakeT > 0 ? '#e070ff' : '#c084f0', 0.55 + 0.35 * Math.sin(game.time * 6));
+      } else if (w.hatch && w.hatchKnown) {
+        drawArrow(w.hatch.x, w.hatch.y, '#7fb4cc', 0.4 + 0.25 * Math.sin(game.time * 5)); // 비상 해치 (서브)
       } else if (game.pingShow > 0 && game.pingTarget) {
         drawArrow(game.pingTarget.x, game.pingTarget.y, '#d8cc8a', BK.clamp(game.pingShow, 0, 1) * 0.45);
       }
