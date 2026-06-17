@@ -314,14 +314,14 @@
     if (game.state === 'customize' && (k === 'enter' || k === ' ')) { confirmLook(); return; }
     if (game.state === 'intro' && (k === ' ' || k === 'enter')) { advanceIntro(); return; }
     if (game.state === 'intro' && k === 'escape') { introIdx = INTRO_CARDS.length; advanceIntro(); return; }
+    if (game.state === 'note' && (k === 'e' || k === 'enter' || k === 'escape')) { closeNote(); return; }
     if (game.state === 'play') {
-      if (k === 'q') throwItem('rock');
-      if (k === 'g') throwItem('almond');
-      if (k === 'h') drinkAlmond();
-      if (k === 'e') interact();
+      if (k === 'q') { throwItem('rock'); return; }
+      if (k === 'g') { throwItem('almond'); return; }
+      if (k === 'h') { drinkAlmond(); return; }
+      if (k === 'e') { interact(); return; }
     }
-    if (game.state === 'note' && (k === 'e' || k === 'enter' || k === 'escape')) closeNote();
-    else if (k === 'escape') {
+    if (k === 'escape') {
       if (game.state === 'play') { game.state = 'pause'; showPause(); }
       else if (game.state === 'pause') { game.state = 'play'; hideOverlay(); }
     }
@@ -357,6 +357,7 @@
         <div class="t-keys">이동 WASD/방향키 · 달리기 Shift · 상호작용/숨기 E<br>
         돌 던지기 Q · 아몬드 워터: 마시기 H / 던지기 G(괴물 약화)<br>
         문을 닫아 막고, 가구를 밀어 봉쇄하고, 돌로 주의를 돌려라 · 음소거 M · 일시정지 ESC</div>
+        <div class="t-credit">Made with Claude Fable 5</div>
         ${secretLine}
       </div>`);
     document.getElementById('btn-start').addEventListener('click', () => { BK.audio.init(); showCustomize(); });
