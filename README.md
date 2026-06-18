@@ -1,0 +1,35 @@
+# the rooms
+
+탑다운 픽셀 호러 게임입니다. 끝없이 이어지는 낯선 방을 탐색하며, 빛과 소리, 기록을 단서로 빠져나갈 길을 찾습니다.
+
+Made with Claude Fable 5.
+
+그래픽과 사운드는 코드로 절차 생성되며, 외부 이미지/오디오 에셋 없이 로컬 픽셀 폰트만 사용합니다.
+
+## 플레이
+
+- 무한 절차 생성 맵
+- 빛과 어둠을 이용한 시야 기반 호러
+- 소리로 추적하고 유인하는 괴물 행동
+- 기록을 읽으며 풀리는 루프형 스토리
+- 숨기, 던지기, 문 닫기, 가구 밀기 같은 생존 상호작용
+
+## 실행
+
+```bash
+python3 -m http.server 8000
+```
+
+브라우저에서 `http://localhost:8000`에 접속하면 플레이할 수 있습니다.
+
+`index.html`을 더블클릭해서 바로 열어도 동작합니다.
+
+## 조작
+
+이동 WASD/방향키 · 달리기 Shift · 상호작용/숨기 E · 돌 던지기 Q · 아몬드 워터 마시기 H / 던지기 G · 음소거 M · 일시정지 ESC
+
+## License
+
+The game code, generated graphics, generated audio, story, and design are not released under an open-source license unless stated otherwise.
+
+The bundled Galmuri11 font is licensed separately under the SIL Open Font License 1.1. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
