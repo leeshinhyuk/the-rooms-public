@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>the rooms</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@font-face {
+  font-family: 'Galmuri11';
+  src: url('fonts/Galmuri11.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #060604;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Galmuri11', monospace, sans-serif;
+}
+#wrap { position: relative; line-height: 0; }
+#screen {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+  width: min(960px, 100vw);
+  height: auto;
+  background: #000;
+  cursor: crosshair;
+}
+#overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(2, 2, 0, 0.55);
+  line-height: 1.6;
+  z-index: 10;
+}
+#overlay.hidden { display: none; }
+.box {
+  max-width: 620px;
+  padding: 28px 36px;
+  text-align: center;
+  color: #d8cc8a;
+  text-shadow: 0 0 8px rgba(216, 204, 138, 0.35);
+}
+.t-pre {
+  font-size: 15px; letter-spacing: 8px; color: #8a7f4e; margin-bottom: 6px;
+}
+.t-main {
+  font-size: 64px; margin: 0; letter-spacing: 6px; color: #e8da8f;
+  animation: flicker 4.2s infinite;
+  text-shadow: 0 0 18px rgba(232, 218, 143, 0.5), 0 0 50px rgba(232, 218, 143, 0.18);
+}
+.t-keys { font-size: 12px; color: #6e6440; margin-top: 18px; line-height: 1.8; }
+.t-credit { font-size: 11px; color: #4e492f; margin-top: 12px; letter-spacing: 2px; }
+button {
+  font-family: inherit;
+  font-size: 18px;
+  color: #ffefa8;
+  background: rgba(40, 36, 14, 0.85);
+  border: 2px solid #8a7f4e;
+  padding: 12px 34px;
+  cursor: pointer;
+  letter-spacing: 3px;
+  box-shadow: 0 0 14px rgba(216, 204, 138, 0.2);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+button:hover {
+  background: rgba(78, 70, 26, 0.9);
+  box-shadow: 0 0 24px rgba(255, 239, 168, 0.45);
+  animation: flicker 0.8s infinite;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  3% { opacity: 0.55; }
+  6% { opacity: 1; }
+  7% { opacity: 0.3; }
+  9% { opacity: 1; }
+  42% { opacity: 1; }
+  44% { opacity: 0.72; }
+  46% { opacity: 1; }
+}
+.note-box {
+  max-width: 480px;
+  background: linear-gradient(168deg, #efe6c4 0%, #e0d4a8 60%, #cfc190 100%);
+  color: #3a3322;
+  padding: 30px 36px 24px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 14px 50px rgba(0,0,0,0.85), inset 0 0 60px rgba(110, 95, 50, 0.25);
+  text-align: left;
+  border: 1px solid #b3a574;
+}
+.note-head {
+  font-size: 14px; color: #7a6c42; letter-spacing: 4px;
+  border-bottom: 1px dashed #a4956a; padding-bottom: 8px; margin-bottom: 14px;
+}
+.note-body { font-size: 16px; line-height: 2.0; white-space: pre-line; }
+.note-box button {
+  margin-top: 18px; font-size: 14px; padding: 8px 22px;
+  color: #4a4128; background: rgba(255,255,255,0.25); border-color: #8a7c52;
+  box-shadow: none;
+}
+.note-box button:hover { background: rgba(255,255,255,0.5); animation: none; }
+.btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+button.ghost {
+  color: #8a7f4e; border-color: #55502f; box-shadow: none; font-size: 15px;
+}
+.zone-card .t-pre { animation: flicker 3s infinite; }
+.end-title { font-size: 38px; margin: 0 0 14px; letter-spacing: 4px; }
+.end-title.red { color: #c84a3a; text-shadow: 0 0 16px rgba(200, 74, 58, 0.6); animation: flicker 2.6s infinite; }
+.end-title.green { color: #b6d89a; text-shadow: 0 0 16px rgba(182, 216, 154, 0.5); }
+.end-title.shatter { color: #8c1d16; text-shadow: 0 0 18px rgba(160, 20, 14, 0.7), 0 0 40px rgba(120,10,8,0.4); animation: flicker 1.8s infinite; }
+.end-story { font-size: 15px; color: #b9ad77; line-height: 2.0; margin-bottom: 18px; }
+.end-stats { font-size: 13px; color: #8a7f4e; margin-bottom: 24px; line-height: 1.9; }
+
+/* ---- 캐릭터 커스터마이징 ---- */
+.look-box { max-width: 480px; }
+#look-prev {
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  display: block; margin: 0 auto 6px;
+  background: radial-gradient(circle at 50% 42%, rgba(60,64,40,0.5), rgba(4,4,2,0.85) 70%);
+  border: 1px solid #55502f;
+}
+.look-name { font-size: 13px; color: #c9bd86; letter-spacing: 1px; margin-bottom: 16px; min-height: 16px; }
+.look-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+.look-lab { font-size: 13px; color: #8a7f4e; letter-spacing: 3px; width: 44px; text-align: right; }
+.look-sw { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatch {
+  width: 26px; height: 26px; padding: 0; min-width: 0;
+  border: 2px solid #55502f; border-radius: 4px; cursor: pointer;
+  box-shadow: none; letter-spacing: 0; transition: transform 0.1s, border-color 0.1s;
+}
+.swatch:hover { transform: scale(1.12); animation: none; border-color: #b3a574; box-shadow: 0 0 8px rgba(216,204,138,0.4); }
+.swatch.sel { border-color: #ffe9a0; box-shadow: 0 0 10px rgba(255,233,160,0.7); transform: scale(1.12); }
+.look-box button#btn-look-go { margin-top: 18px; font-size: 16px; padding: 10px 26px; }
+
+/* ---- 인트로 컷신 ---- */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98) rotate(var(--rot, 0deg)); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotate(var(--rot, 0deg)); }
+}
+.news {
+  --rot: -0.8deg;
+  max-width: 580px;
+  background: #d2ccba;
+  color: #1a1813;
+  padding: 26px 34px 30px;
+  text-align: left;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.9), inset 0 0 80px rgba(120,110,80,0.15);
+  border: 1px solid #8f897a;
+  transform: rotate(-0.8deg);
+  animation: cardIn 0.7s ease both;
+  filter: contrast(1.05) sepia(0.12);
+}
+.news-tag {
+  font-size: 12px; letter-spacing: 4px; color: #7a2218; font-weight: bold;
+  border-bottom: 3px double #1a1813; padding-bottom: 7px; margin-bottom: 12px;
+  display: flex; justify-content: space-between;
+}
+.news-head { font-size: 25px; margin: 10px 0 14px; line-height: 1.45; color: #16140f; }
+.news-body { font-size: 14px; line-height: 1.95; color: #2c281d; }
+.news-body b { color: #7a2218; }
+.news-date { font-size: 11px; color: #6a6052; margin-top: 16px; font-style: italic; }
+.cut-mono {
+  max-width: 600px; text-align: center; color: #c9bd86;
+  font-size: 19px; line-height: 2.1; letter-spacing: 1px;
+  animation: cardIn 1.0s ease both;
+  text-shadow: 0 0 12px rgba(201,189,134,0.3);
+}
+.cut-mono .small { font-size: 14px; color: #8a7f4e; }
+.skip-hint {
+  position: absolute; bottom: 18px; right: 26px;
+  font-size: 12px; color: #5a5436; letter-spacing: 2px;
+  animation: flicker 3s infinite;
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="screen" width="960" height="624"></canvas>
+  <div id="overlay" class="hidden"></div>
+</div>
+<script src="js/util.js?v=27"></script>
+<script src="js/assets.js?v=27"></script>
+<script src="js/audio.js?v=27"></script>
+<script src="js/map.js?v=27"></script>
+<script src="js/actors.js?v=27"></script>
+<script src="js/fx.js?v=27"></script>
+<script src="js/main.js?v=27"></script>
+</body>
+</html>
