@@ -410,7 +410,7 @@ BK.buildAssets = function () {
   })();
 
   // ---------- 포털 ----------
-  // 균열 (글리치, 4프레임)
+  // 균열 (글리치, 4프레임) — 심연 + 번개 필라멘트
   A.rift = [];
   for (let f = 0; f < 4; f++) {
     const s = 32, c = mk(s, s), g = c.getContext('2d');
@@ -426,6 +426,23 @@ BK.buildAssets = function () {
       else if (d < 5 && h > 0.55) col = '#04020c';
       g.fillStyle = col; g.fillRect(x, y, 1, 1);
     }
+    // 심핵에서 뻗는 번개 필라멘트 (프레임마다 방향이 튄다)
+    const rng = BK.mulberry32(9000 + f * 17);
+    for (let b = 0; b < 3; b++) {
+      let x = 16, y = 16, a = rng() * Math.PI * 2;
+      g.strokeStyle = b ? 'rgba(164,78,224,0.8)' : 'rgba(65,200,212,0.8)';
+      g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x, y);
+      for (let sg2 = 0; sg2 < 3; sg2++) {
+        a += (rng() - 0.5) * 1.4;
+        x += Math.cos(a) * (3 + rng() * 3); y += Math.sin(a) * (3 + rng() * 3);
+        g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+    // 백열 심핵
+    g.fillStyle = 'rgba(238,226,255,0.9)';
+    g.fillRect(15 + (f % 2), 15, 2, 1); g.fillRect(15, 16, 1, 1);
     A.rift.push(c);
   }
   // 화물 엘리베이터
@@ -433,15 +450,31 @@ BK.buildAssets = function () {
     const c = mk(30, 36), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(2, 33, 26, 3);
     g.fillStyle = '#2a2e33'; g.fillRect(0, 0, 30, 34);     // 프레임
+    g.fillStyle = '#3a4046'; g.fillRect(1, 1, 28, 1);      // 프레임 윗빛
     g.fillStyle = '#4a5057'; g.fillRect(2, 2, 26, 30);
     g.fillStyle = '#5a626a'; g.fillRect(3, 3, 11, 28);     // 왼문
     g.fillStyle = '#555d65'; g.fillRect(16, 3, 11, 28);    // 오른문
-    g.fillStyle = '#23272b'; g.fillRect(14, 3, 2, 28);     // 틈
+    g.fillStyle = '#6a737c'; g.fillRect(3, 3, 11, 1); g.fillRect(16, 3, 11, 1);
+    g.fillStyle = '#101316'; g.fillRect(14, 3, 2, 28);     // 문틈 — 그 너머의 어둠
+    g.fillStyle = '#23272b'; g.fillRect(13, 3, 1, 28); g.fillRect(16, 3, 1, 28);
     g.fillStyle = '#1a1d20';
     g.fillRect(4, 8, 9, 1); g.fillRect(17, 8, 9, 1);       // 패널 라인
     g.fillRect(4, 24, 9, 1); g.fillRect(17, 24, 9, 1);
+    // 흘러내린 기름때
+    g.fillStyle = 'rgba(20,22,24,0.4)';
+    g.fillRect(5, 9, 1, 7); g.fillRect(11, 9, 1, 4); g.fillRect(20, 9, 1, 9); g.fillRect(25, 25, 1, 6);
+    for (let y = 3; y < 31; y++) for (let x = 3; x < 27; x++) {
+      if (BK.hash2(x, y, 44.4) > 0.95) { g.fillStyle = 'rgba(125,72,32,0.35)'; g.fillRect(x, y, 1, 1); }
+    }
+    // 하단 경고 줄무늬
+    for (let x = 3; x < 27; x += 4) {
+      g.fillStyle = '#8a7426'; g.fillRect(x, 30, 2, 1);
+      g.fillStyle = '#1a1d20'; g.fillRect(x + 2, 30, 2, 1);
+    }
     g.fillStyle = '#c9a227'; g.fillRect(12, 0, 6, 2);      // 표시등
-    g.fillStyle = 'rgba(255,220,120,0.7)'; g.fillRect(13, 0, 4, 1);
+    g.fillStyle = 'rgba(255,220,120,0.8)'; g.fillRect(13, 0, 4, 1);
+    g.fillStyle = '#3a3f45'; g.fillRect(28, 12, 2, 5);     // 호출 버튼 패널
+    g.fillStyle = '#c03030'; g.fillRect(28, 14, 1, 1);
     return c;
   })();
   // 마지막 문 (빛이 새어나오는)
@@ -450,44 +483,68 @@ BK.buildAssets = function () {
     g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(2, 29, 18, 3);
     g.fillStyle = '#241a14'; g.fillRect(0, 0, 22, 30);
     g.fillStyle = '#3c2c20'; g.fillRect(2, 2, 18, 27);
+    g.fillStyle = '#4a3828'; g.fillRect(2, 2, 18, 1);
     g.fillStyle = '#33251b'; g.fillRect(4, 4, 6, 11); g.fillRect(12, 4, 6, 11);
     g.fillRect(4, 17, 6, 10); g.fillRect(12, 17, 6, 10);
-    g.fillStyle = '#c9b380'; g.fillRect(16, 15, 2, 3); // 손잡이
-    // 새어나오는 빛
+    g.fillStyle = '#2a1e15';                            // 패널 파임
+    g.fillRect(4, 4, 6, 1); g.fillRect(12, 4, 6, 1); g.fillRect(4, 17, 6, 1); g.fillRect(12, 17, 6, 1);
+    g.fillStyle = '#c9b380'; g.fillRect(16, 15, 2, 3);  // 손잡이
+    g.fillStyle = '#8a7a52'; g.fillRect(17, 16, 1, 1);
+    // 새어나오는 빛 — 문틈 + 바닥 + 열쇠 구멍
     g.fillStyle = 'rgba(240,250,255,0.95)';
     g.fillRect(0, 29, 22, 1);
     g.fillRect(10, 0, 2, 30);
     g.fillStyle = 'rgba(240,250,255,0.4)';
     g.fillRect(9, 0, 4, 30); g.fillRect(0, 28, 22, 2);
+    g.fillStyle = 'rgba(240,250,255,0.25)';
+    g.fillRect(8, 0, 6, 30); g.fillRect(1, 27, 20, 1);
+    g.fillStyle = 'rgba(240,250,255,0.8)'; g.fillRect(16, 16, 1, 1); // 열쇠 구멍의 빛
     return c;
   })();
 
   // ---------- 소품 ----------
   A.mannequin = (() => {
     const c = mk(14, 27), g = c.getContext('2d');
-    const B = '#cfc4b0', D = '#a89e8a';
+    const B = '#d3c8b2', D = '#a89d86', DD = '#7e7461', L = '#e8dfcc';
     g.fillStyle = 'rgba(0,0,0,0.35)';
     g.beginPath(); g.ellipse(7, 25.5, 5, 1.8, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = D; g.fillRect(5, 22, 4, 3);          // 받침대 기둥
-    g.fillStyle = '#6a6052'; g.fillRect(3, 24, 8, 2);  // 받침
+    g.fillStyle = '#4e463a'; g.fillRect(3, 24, 8, 2);   // 받침
+    g.fillStyle = '#6a6052'; g.fillRect(3, 24, 8, 1);
+    g.fillStyle = D; g.fillRect(6, 20, 2, 4);           // 기둥
+    // 몸통 — 어깨/허리/골반 곡선
     g.fillStyle = B;
-    g.fillRect(5, 9, 4, 9);                            // 몸통
-    g.fillRect(4, 10, 1, 6); g.fillRect(9, 10, 1, 6);  // 팔 (붙은)
-    g.fillStyle = D; g.fillRect(5, 17, 4, 1);          // 허리 이음새
-    g.fillStyle = B;
-    g.fillRect(5, 2, 4, 6);                            // 머리 (이목구비 없음)
-    g.fillRect(6, 1, 2, 1);
-    g.fillStyle = D; g.fillRect(5, 7, 4, 1);           // 목 이음새
+    g.fillRect(4, 9, 6, 4);                             // 가슴
+    g.fillRect(5, 13, 4, 4);                            // 잘록한 허리
+    g.fillRect(4, 17, 6, 3);                            // 골반
+    g.fillStyle = L; g.fillRect(4, 9, 1, 4); g.fillRect(5, 13, 1, 4); g.fillRect(4, 17, 1, 3); // 왼쪽 빛
+    g.fillStyle = D; g.fillRect(9, 10, 1, 3); g.fillRect(8, 13, 1, 4); g.fillRect(9, 17, 1, 3); // 오른쪽 음영
+    g.fillStyle = DD; g.fillRect(4, 12, 6, 1); g.fillRect(4, 16, 6, 1); // 조립 이음새
+    // 팔 — 한쪽만 남았다. 반대쪽은 어깨 소켓 구멍뿐
+    g.fillStyle = B; g.fillRect(3, 10, 1, 6);
+    g.fillStyle = D; g.fillRect(3, 15, 1, 1);
+    g.fillStyle = '#3a342c'; g.fillRect(10, 10, 1, 1);  // 빈 소켓
+    // 목/머리 — 미세하게 기울었다
+    g.fillStyle = D; g.fillRect(6, 8, 2, 1);
+    g.fillStyle = B; g.fillRect(5, 2, 4, 6); g.fillRect(6, 1, 3, 1);
+    g.fillStyle = L; g.fillRect(5, 2, 1, 5);
+    g.fillStyle = D; g.fillRect(8, 2, 1, 6);
+    g.fillStyle = DD; g.fillRect(5, 7, 4, 1);           // 목 이음새
+    // 이목구비는 없다 — 딱 한 줄 실금만
+    g.fillStyle = 'rgba(90,80,64,0.6)'; g.fillRect(7, 3, 1, 3);
     return c;
   })();
-  A.teddy = (() => {
+  A.teddy = (() => {                 // 한쪽 눈을 잃은 곰인형
     const c = mk(10, 10), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(2, 8, 6, 2);
     g.fillStyle = '#7a5a3a';
     g.fillRect(3, 4, 4, 5); g.fillRect(2, 5, 1, 2); g.fillRect(7, 5, 1, 2);
     g.fillRect(3, 1, 4, 3); g.fillRect(2, 0, 2, 2); g.fillRect(6, 0, 2, 2);
-    g.fillStyle = '#1a1410'; g.fillRect(4, 2, 1, 1); g.fillRect(6, 2, 1, 1);
-    g.fillStyle = '#5a4028'; g.fillRect(4, 6, 2, 2);
+    g.fillStyle = '#8f6c46'; g.fillRect(3, 1, 4, 1); g.fillRect(2, 0, 1, 1); // 정수리 빛
+    g.fillStyle = '#5a4028'; g.fillRect(3, 0, 1, 1); g.fillRect(7, 0, 1, 1); // 귀 안쪽
+    g.fillStyle = '#1a1410'; g.fillRect(4, 2, 1, 1);   // 남은 눈
+    g.fillStyle = '#3a2c1c'; g.fillRect(6, 2, 1, 1);   // 뜯긴 눈자리 실밥
+    g.fillStyle = '#9a7a52'; g.fillRect(4, 6, 2, 2);   // 배 헝겊
+    g.fillStyle = '#5a4028'; g.fillRect(5, 4, 1, 1); g.fillRect(4, 8, 1, 1); // 몸통 박음질
     return c;
   })();
   A.ball = (() => {
@@ -496,18 +553,24 @@ BK.buildAssets = function () {
     g.beginPath(); g.ellipse(4, 7, 3, 1, 0, 0, Math.PI * 2); g.fill();
     g.fillStyle = '#b04840';
     g.beginPath(); g.arc(4, 4, 3, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#d8d0c0';
-    g.fillRect(1.5, 3, 5, 2);
-    g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(3, 2, 1, 1);
+    g.fillStyle = '#8a342e';                            // 아래 음영
+    g.beginPath(); g.arc(4.6, 4.8, 2.2, 0, Math.PI); g.fill();
+    g.fillStyle = '#d8d0c0'; g.fillRect(1.5, 3, 5, 2);  // 흰 띠
+    g.fillStyle = '#aaa294'; g.fillRect(1.5, 4, 5, 1);
+    g.fillStyle = 'rgba(255,255,255,0.6)'; g.fillRect(3, 2, 1, 1);
     return c;
   })();
   A.blocks = (() => {
     const c = mk(10, 8), g = c.getContext('2d');
+    g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(1, 6, 8, 1);
     g.fillStyle = '#5a78c0'; g.fillRect(1, 3, 4, 4);
+    g.fillStyle = '#7290d4'; g.fillRect(1, 3, 4, 1);
     g.fillStyle = '#c0a050'; g.fillRect(5, 4, 4, 4);
+    g.fillStyle = '#d4b464'; g.fillRect(5, 4, 4, 1);
     g.fillStyle = '#b04840'; g.fillRect(3, 0, 4, 4);
-    g.fillStyle = 'rgba(0,0,0,0.3)';
-    g.fillRect(1, 6, 8, 1);
+    g.fillStyle = '#c85c54'; g.fillRect(3, 0, 4, 1);
+    g.fillStyle = 'rgba(20,14,10,0.5)';                 // 새긴 글자
+    g.fillRect(2, 4, 1, 2); g.fillRect(6, 5, 2, 1); g.fillRect(4, 1, 2, 1);
     return c;
   })();
 
@@ -515,73 +578,124 @@ BK.buildAssets = function () {
   A.crate = (() => {                 // 낡은 나무 상자
     const c = mk(16, 15), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(2, 13, 12, 2);
-    g.fillStyle = '#6e5734'; g.fillRect(2, 3, 12, 11);
-    g.fillStyle = '#5a4628'; g.fillRect(2, 3, 12, 1); g.fillRect(2, 13, 12, 1);
-    g.fillStyle = '#7d6440';
-    for (let x = 3; x < 14; x += 3) g.fillRect(x, 4, 1, 9);
-    g.fillStyle = '#4a3a22'; g.fillRect(2, 8, 12, 1);   // 띠
-    g.fillStyle = 'rgba(255,240,200,0.1)'; g.fillRect(3, 4, 10, 1);
+    g.fillStyle = '#6b5433'; g.fillRect(2, 3, 12, 11);
+    // 나뭇결
+    for (let y = 4; y < 13; y++) for (let x = 3; x < 14; x++) {
+      const h = BK.hash2(x, y, 17.7);
+      if (h > 0.86) { g.fillStyle = '#5b4628'; g.fillRect(x, y, 1, 1); }
+      else if (h < 0.06) { g.fillStyle = '#7d6440'; g.fillRect(x, y, 1, 1); }
+    }
+    g.fillStyle = '#84683f'; g.fillRect(2, 3, 12, 1);   // 윗면 빛
+    g.fillStyle = '#4a3a22'; g.fillRect(2, 13, 12, 1);
+    g.fillStyle = '#4c3a20';                             // 널빤지 틈
+    g.fillRect(5, 4, 1, 9); g.fillRect(9, 4, 1, 9); g.fillRect(13, 4, 1, 9);
+    g.fillStyle = '#4a3a22'; g.fillRect(2, 8, 12, 1);   // 가로 띠
+    g.fillStyle = '#84683f'; g.fillRect(2, 9, 12, 1);
+    g.fillStyle = '#2e2414';                             // 못
+    g.fillRect(3, 4, 1, 1); g.fillRect(12, 4, 1, 1); g.fillRect(3, 12, 1, 1); g.fillRect(12, 12, 1, 1);
+    g.fillStyle = '#3a2e18'; g.fillRect(6, 10, 4, 2);   // 스텐실 자국
+    g.clearRect(2, 3, 1, 1); g.clearRect(13, 12, 1, 1); // 깨진 모서리
     return c;
   })();
   A.chair = (() => {                 // 쓰러질 듯한 사무용 의자
     const c = mk(14, 18), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(3, 16, 9, 2);
-    g.fillStyle = '#2c2c30'; g.fillRect(4, 1, 6, 8);    // 등받이
-    g.fillStyle = '#3a3a40'; g.fillRect(5, 2, 4, 6);
-    g.fillStyle = '#26262a'; g.fillRect(3, 9, 8, 2);    // 좌석
-    g.fillStyle = '#1c1c20'; g.fillRect(6, 11, 2, 4);   // 기둥
-    g.fillStyle = '#15151a'; g.fillRect(4, 15, 6, 1);   // 다리
+    // 등받이 — 살짝 비틀렸다
+    g.fillStyle = '#2b2b30'; g.fillRect(5, 1, 6, 4); g.fillRect(4, 5, 6, 5);
+    g.fillStyle = '#3c3c44'; g.fillRect(6, 2, 4, 3); g.fillRect(5, 5, 4, 4);
+    g.fillStyle = '#1e1e23'; g.fillRect(5, 1, 6, 1);
+    // 찢어진 쿠션 — 스펀지가 비죽
+    g.fillStyle = '#17171b'; g.fillRect(6, 4, 2, 3);
+    g.fillStyle = '#8f8468'; g.fillRect(6, 5, 1, 1);
+    // 좌석 + 기둥 + 다리 + 바퀴
+    g.fillStyle = '#26262a'; g.fillRect(3, 10, 8, 2);
+    g.fillStyle = '#35353b'; g.fillRect(3, 10, 8, 1);
+    g.fillStyle = '#1b1b20'; g.fillRect(6, 12, 2, 3);
+    g.fillStyle = '#141419'; g.fillRect(3, 15, 8, 1);
+    g.fillStyle = '#0c0c10';
+    g.fillRect(3, 16, 1, 1); g.fillRect(10, 16, 1, 1); g.fillRect(6, 16, 2, 1);
     return c;
   })();
   A.pipe = (() => {                  // 벽을 타는 파이프
     const c = mk(8, 20), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(5, 0, 2, 20);
-    g.fillStyle = '#5a5e62'; g.fillRect(2, 0, 4, 20);
-    g.fillStyle = '#74787c'; g.fillRect(2, 0, 1, 20);
-    g.fillStyle = '#3e4246'; g.fillRect(1, 4, 6, 2); g.fillRect(1, 14, 6, 2); // 이음매
-    g.fillStyle = 'rgba(125,72,32,0.4)'; g.fillRect(3, 8, 2, 4); // 녹
+    g.fillStyle = '#565a5e'; g.fillRect(2, 0, 4, 20);
+    g.fillStyle = '#7a7e82'; g.fillRect(2, 0, 1, 20);   // 하이라이트
+    g.fillStyle = '#42464a'; g.fillRect(5, 0, 1, 20);   // 음영
+    g.fillStyle = '#3e4246'; g.fillRect(1, 4, 6, 2); g.fillRect(1, 14, 6, 2); // 플랜지
+    g.fillStyle = '#565a5e'; g.fillRect(1, 4, 6, 1); g.fillRect(1, 14, 6, 1);
+    g.fillStyle = 'rgba(125,72,32,0.45)'; g.fillRect(3, 8, 2, 4); g.fillRect(2, 16, 2, 3); // 녹물
     return c;
   })();
-  A.drum = (() => {                  // 드럼통
+  A.drum = (() => {                  // 드럼통 — 원통 음영
     const c = mk(14, 18), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(2, 16, 10, 2);
-    g.fillStyle = '#3a5a3a'; g.fillRect(2, 2, 10, 14);
+    const ramp = ['#4e7a4a', '#456f42', '#3c603a', '#334f31', '#2a3f28'];
+    for (let x = 2; x < 12; x++) {
+      g.fillStyle = ramp[Math.min(4, Math.max(0, Math.round(((x - 2) / 9) * 4 + 0.4)))];
+      g.fillRect(x, 2, 1, 14);
+    }
     g.fillStyle = '#2c462c'; g.fillRect(2, 2, 10, 1); g.fillRect(2, 15, 10, 1);
-    g.fillStyle = '#4a6e4a'; g.fillRect(2, 6, 10, 1); g.fillRect(2, 11, 10, 1);
-    g.fillStyle = '#2c462c'; g.fillRect(3, 2, 8, 1);   // 뚜껑
-    g.fillStyle = 'rgba(125,72,32,0.5)'; g.fillRect(3, 9, 3, 5); // 녹
-    g.fillStyle = '#d8c84a'; g.fillRect(6, 8, 2, 3);   // 위험 표식
+    g.fillStyle = '#5a8a54'; g.fillRect(3, 2, 4, 1);    // 뚜껑 빛
+    // 보강 링 두 줄
+    g.fillStyle = '#55804f'; g.fillRect(2, 6, 10, 1); g.fillRect(2, 11, 10, 1);
+    g.fillStyle = '#243722'; g.fillRect(2, 7, 10, 1); g.fillRect(2, 12, 10, 1);
+    g.fillStyle = 'rgba(125,72,32,0.55)';                // 녹 + 흘러내림
+    g.fillRect(8, 8, 3, 5); g.fillRect(9, 13, 1, 3);
+    g.fillStyle = '#d8c84a'; g.fillRect(4, 8, 3, 3);    // 위험 표식
+    g.fillStyle = '#1a1a14'; g.fillRect(5, 9, 1, 1);
+    g.fillStyle = 'rgba(20,24,18,0.5)'; g.fillRect(3, 16, 4, 1); // 바닥에 샌 얼룩
     return c;
   })();
   A.console = (() => {               // 죽은 제어반
     const c = mk(18, 16), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(2, 14, 14, 2);
-    g.fillStyle = '#33373c'; g.fillRect(1, 2, 16, 13);
-    g.fillStyle = '#23272b'; g.fillRect(2, 3, 14, 7);  // 패널
-    for (let i = 0; i < 4; i++) {                       // 죽은 표시등
-      g.fillStyle = ['#5a2222', '#5a5022', '#22405a', '#333'][i];
-      g.fillRect(3 + i * 3, 5, 2, 2);
+    g.fillStyle = '#343a40'; g.fillRect(1, 2, 16, 13);
+    g.fillStyle = '#454c54'; g.fillRect(1, 2, 16, 1);   // 상단 빛
+    g.fillStyle = '#23272b'; g.fillRect(2, 3, 14, 8);   // 패널
+    // 죽은 CRT — 꺼진 초록 잔광
+    g.fillStyle = '#0e1a14'; g.fillRect(3, 4, 6, 5);
+    g.fillStyle = '#16281e'; g.fillRect(4, 5, 4, 1);
+    g.fillStyle = 'rgba(90,140,110,0.18)'; g.fillRect(4, 6, 2, 1);
+    // 죽은 표시등 줄
+    for (let i = 0; i < 3; i++) {
+      g.fillStyle = ['#5a2222', '#5a5022', '#22405a'][i];
+      g.fillRect(11 + i * 2, 4, 1, 1);
     }
-    g.fillStyle = '#444'; g.fillRect(3, 10, 12, 3);    // 스위치 줄
-    for (let x = 4; x < 15; x += 3) { g.fillStyle = '#666'; g.fillRect(x, 11, 1, 1); }
+    g.fillStyle = '#3a4148'; g.fillRect(10, 6, 6, 3);   // 계기판
+    g.fillStyle = '#23272b'; g.fillRect(11, 7, 1, 1); g.fillRect(14, 7, 1, 1);
+    // 스위치 줄 + 케이블
+    g.fillStyle = '#454c54'; g.fillRect(3, 11, 12, 3);
+    for (let x = 4; x < 15; x += 3) { g.fillStyle = '#666e76'; g.fillRect(x, 12, 1, 1); }
+    g.fillStyle = '#1c2024'; g.fillRect(16, 10, 1, 5); g.fillRect(15, 14, 2, 1);
     return c;
   })();
-  A.kchair = (() => {                // 작은 어린이 의자
+  A.kchair = (() => {                // 작은 어린이 의자 — 칠이 벗겨졌다
     const c = mk(10, 13), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(2, 11, 6, 2);
-    g.fillStyle = '#a85a4a'; g.fillRect(3, 1, 4, 6);   // 등받이
+    g.fillStyle = '#a85a4a'; g.fillRect(3, 1, 4, 6);
     g.fillStyle = '#bf6a58'; g.fillRect(3, 1, 4, 1);
-    g.fillStyle = '#945046'; g.fillRect(2, 7, 6, 2);   // 좌석
+    g.fillStyle = '#c9a06a'; g.fillRect(4, 3, 1, 1); g.fillRect(6, 5, 1, 1); // 벗겨진 칠
+    g.fillStyle = '#945046'; g.fillRect(2, 7, 6, 2);
+    g.fillStyle = '#a85a4a'; g.fillRect(2, 7, 6, 1);
     g.fillStyle = '#7a4038'; g.fillRect(3, 9, 1, 3); g.fillRect(6, 9, 1, 3);
+    g.fillStyle = '#d8c84a'; g.fillRect(5, 2, 1, 1);    // 별 스티커
     return c;
   })();
-  A.kdesk = (() => {                 // 작은 책상
+  A.kdesk = (() => {                 // 작은 책상 — 크레용 낙서가 남았다
     const c = mk(18, 12), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(2, 10, 14, 2);
-    g.fillStyle = '#9a7a4a'; g.fillRect(1, 3, 16, 3);  // 상판
+    g.fillStyle = '#9a7a4a'; g.fillRect(1, 3, 16, 3);
     g.fillStyle = '#b08c54'; g.fillRect(1, 3, 16, 1);
-    g.fillStyle = '#7a5e38'; g.fillRect(2, 6, 2, 5); g.fillRect(14, 6, 2, 5); // 다리
-    g.fillStyle = '#caa050'; g.fillRect(6, 1, 5, 2);   // 위에 종이
+    g.fillStyle = '#7a5e38'; g.fillRect(1, 5, 16, 1);   // 상판 밑면
+    g.fillRect(2, 6, 2, 5); g.fillRect(14, 6, 2, 5);    // 다리
+    g.fillStyle = '#68502e'; g.fillRect(3, 6, 1, 5); g.fillRect(15, 6, 1, 5);
+    g.fillStyle = '#caa050'; g.fillRect(6, 1, 5, 2);    // 위에 종이
+    g.fillStyle = '#8a8468'; g.fillRect(7, 1, 3, 1);
+    // 크레용 낙서
+    g.fillStyle = '#c05a50'; g.fillRect(3, 4, 2, 1);
+    g.fillStyle = '#5a78c0'; g.fillRect(12, 4, 1, 1);
+    g.fillStyle = '#3d3020'; g.fillRect(9, 4, 1, 1);    // 파인 흠
     return c;
   })();
 
@@ -611,23 +725,39 @@ BK.buildAssets = function () {
   function paintLocker(open) {
     const c = mk(16, 28), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(2, 26, 12, 2);
-    g.fillStyle = '#3c4650'; g.fillRect(1, 0, 14, 27);     // 외곽
-    g.fillStyle = '#2c343c'; g.fillRect(1, 0, 14, 1);
+    g.fillStyle = '#333d46'; g.fillRect(1, 0, 14, 27);     // 외곽
+    g.fillStyle = '#4c5761'; g.fillRect(1, 0, 14, 1);      // 상단 빛
+    g.fillStyle = '#232b32'; g.fillRect(1, 26, 14, 1);
     if (open) {
-      g.fillStyle = '#0a0c0e'; g.fillRect(3, 2, 10, 23);   // 열린 내부(어둠)
-      g.fillStyle = '#2c343c'; g.fillRect(11, 2, 4, 23);   // 열린 문(옆)
-      g.fillStyle = '#454f59'; g.fillRect(11, 2, 1, 23);
+      g.fillStyle = '#07090b'; g.fillRect(3, 2, 10, 23);   // 열린 내부(어둠)
+      g.fillStyle = '#10141a'; g.fillRect(3, 2, 10, 3);    // 선반 그늘
+      g.fillStyle = '#2c343c'; g.fillRect(11, 1, 4, 25);   // 젖혀진 문
+      g.fillStyle = '#454f59'; g.fillRect(11, 1, 1, 25);
+      g.fillStyle = '#1c2228'; g.fillRect(14, 1, 1, 25);
     } else {
-      g.fillStyle = '#48535d'; g.fillRect(2, 1, 12, 25);   // 닫힌 문
-      g.fillStyle = '#3a444d'; g.fillRect(7, 1, 1, 25);    // 가운데 틈
-      // 통풍구 슬릿
-      g.fillStyle = '#23292f';
-      for (let y = 4; y < 12; y += 2) { g.fillRect(3, y, 4, 1); g.fillRect(9, y, 4, 1); }
-      g.fillStyle = '#23292f'; g.fillRect(6, 14, 1, 3); g.fillRect(9, 14, 1, 3); // 손잡이
+      g.fillStyle = '#46525c'; g.fillRect(2, 1, 12, 25);   // 닫힌 문
+      g.fillStyle = '#57646f'; g.fillRect(2, 1, 12, 1);
+      g.fillStyle = '#39434c'; g.fillRect(2, 20, 12, 6);   // 하단 그늘
+      g.fillStyle = '#2b333a'; g.fillRect(7, 1, 2, 25);    // 가운데 틈
+      g.fillStyle = '#20262c'; g.fillRect(8, 1, 1, 25);
+      // 통풍구 루버 (파인 골 + 아랫날 빛)
+      for (let y = 4; y < 11; y += 2) {
+        g.fillStyle = '#1c2227'; g.fillRect(3, y, 4, 1); g.fillRect(10, y, 4, 1);
+        g.fillStyle = '#5a6873'; g.fillRect(3, y + 1, 4, 1); g.fillRect(10, y + 1, 4, 1);
+      }
+      // 닳아 빈 이름표
+      g.fillStyle = '#8f9789'; g.fillRect(3, 13, 4, 2);
+      g.fillStyle = '#6d7568'; g.fillRect(4, 14, 2, 1);
+      // 걸쇠/손잡이
+      g.fillStyle = '#20262c'; g.fillRect(5, 16, 2, 4); g.fillRect(10, 16, 1, 3);
+      g.fillStyle = '#0e1114'; g.fillRect(5, 17, 1, 2);
+      // 긁힌 자국 — 안에서? 밖에서?
+      g.fillStyle = 'rgba(200,210,215,0.18)';
+      g.fillRect(9, 21, 4, 1); g.fillRect(3, 23, 3, 1); g.fillRect(11, 23, 2, 1);
     }
     // 녹
     for (let y = 0; y < 27; y++) for (let x = 1; x < 15; x++) {
-      if (BK.hash2(x, y, 61.3) > 0.94) { g.fillStyle = 'rgba(125,72,32,0.4)'; g.fillRect(x, y, 1, 1); }
+      if (BK.hash2(x, y, 61.3) > 0.93) { g.fillStyle = 'rgba(118,66,28,0.42)'; g.fillRect(x, y, 1, 1); }
     }
     return c;
   }
@@ -674,12 +804,19 @@ BK.buildAssets = function () {
     const c = mk(16, 18), g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(1, 16, 14, 2);
     g.fillStyle = '#54585e'; g.fillRect(1, 2, 14, 15);
-    g.fillStyle = '#666a70'; g.fillRect(1, 2, 14, 1);
+    g.fillStyle = '#6a6e75'; g.fillRect(1, 2, 14, 1);     // 윗면 빛
+    g.fillStyle = '#63676d'; g.fillRect(2, 3, 12, 1);
     g.fillStyle = '#42464c'; g.fillRect(1, 2, 1, 15);
+    g.fillStyle = '#3a3e44'; g.fillRect(14, 3, 1, 14);    // 오른쪽 음영
     g.fillStyle = '#3e4248'; g.fillRect(1, 9, 14, 1);     // 서랍 구분선
+    g.fillStyle = '#63676d'; g.fillRect(1, 10, 14, 1);
     g.fillStyle = '#2e3236'; g.fillRect(6, 5, 4, 1); g.fillRect(6, 12, 4, 1); // 손잡이
+    g.fillStyle = '#1e2226'; g.fillRect(6, 6, 4, 1); g.fillRect(6, 13, 4, 1);
+    g.fillStyle = 'rgba(200,210,215,0.16)';               // 밀린 긁힘
+    g.fillRect(2, 15, 5, 1); g.fillRect(10, 4, 3, 1);
+    g.fillStyle = '#23272b'; g.fillRect(2, 16, 12, 1);    // 바닥 접지선
     for (let y = 2; y < 17; y++) for (let x = 1; x < 15; x++) {
-      if (BK.hash2(x, y, 71.7) > 0.95) { g.fillStyle = 'rgba(125,72,32,0.4)'; g.fillRect(x, y, 1, 1); }
+      if (BK.hash2(x, y, 71.7) > 0.94) { g.fillStyle = 'rgba(125,72,32,0.4)'; g.fillRect(x, y, 1, 1); }
     }
     return c;
   })();
@@ -912,229 +1049,434 @@ BK.buildAssets = function () {
   // ---------- 등 뒤의 것 (The Stalker) — 길고 깡마른 그림자 ----------
   A.stalker = (() => {
     const w = 22, h = 46, c = mk(w, h), g = c.getContext('2d');
+    const EDGE = '#2a2536', BODY = '#1d1927', CORE = '#120e1a';
     // 배경(어둠)보다 살짝 밝은 짙은 실루엣 — 어둠 속에서도 형체가 인지된다
-    g.fillStyle = '#26222e';
-    g.fillRect(8, 32, 2, 14); g.fillRect(12, 32, 2, 14);     // 긴 다리
-    g.fillRect(10, 44, 3, 2); g.fillRect(7, 44, 3, 2);        // 발
-    g.fillRect(7, 15, 8, 18);                                 // 좁은 몸통
-    g.fillRect(5, 16, 2, 17); g.fillRect(15, 16, 2, 17);      // 늘어진 긴 팔
-    g.fillRect(4, 31, 2, 6); g.fillRect(16, 31, 2, 6);        // 긴 손가락
-    g.fillRect(9, 8, 4, 9);                                   // 길쭉한 목
-    g.save(); g.translate(11, 6); g.rotate(0.14);
-    g.beginPath(); g.ellipse(0, 0, 4.2, 6, 0, 0, Math.PI * 2); g.fill(); g.restore(); // 기울어진 머리
-    // 더 어두운 안쪽 음영
-    g.fillStyle = '#16131c';
-    g.fillRect(8, 17, 6, 14);
+    g.fillStyle = BODY;
+    g.fillRect(8, 30, 2, 14); g.fillRect(13, 30, 2, 14);      // 비정상적으로 긴 다리
+    g.fillRect(6, 44, 3, 2); g.fillRect(13, 44, 3, 2);        // 발
+    g.fillRect(7, 14, 9, 17);                                 // 좁은 몸통
+    g.fillRect(5, 14, 3, 3); g.fillRect(15, 14, 3, 3);        // 각지게 솟은 어깨
+    g.fillRect(5, 16, 2, 18); g.fillRect(16, 16, 2, 18);      // 무릎까지 늘어진 팔
+    g.fillRect(4, 34, 1, 5); g.fillRect(5, 34, 1, 7); g.fillRect(6, 34, 1, 4);   // 길이가 다른 갈퀴 손가락
+    g.fillRect(16, 34, 1, 6); g.fillRect(17, 34, 1, 4); g.fillRect(18, 34, 1, 7);
+    g.fillRect(10, 7, 3, 8);                                  // 길쭉한 목
+    g.save(); g.translate(11.5, 5.5); g.rotate(0.16);
+    g.beginPath(); g.ellipse(0, 0, 4, 5.6, 0, 0, Math.PI * 2); g.fill(); g.restore(); // 기울어진 머리
+    // 심핵 어둠
+    g.fillStyle = CORE;
+    g.fillRect(9, 17, 5, 13); g.fillRect(10, 9, 3, 6);
     // 연기 같은 가장자리 너덜거림
-    g.fillStyle = '#26222e';
-    for (let y = 14; y < 44; y++) {
-      if (BK.hash2(3, y, 7.1) > 0.6) g.fillRect(5 - (BK.hash2(1, y, 2) * 2 | 0), y, 1, 1);
-      if (BK.hash2(17, y, 9.3) > 0.6) g.fillRect(16 + (BK.hash2(9, y, 3) * 2 | 0), y, 1, 1);
+    g.fillStyle = EDGE;
+    for (let y = 4; y < 45; y++) {
+      const hl = BK.hash2(2, y, 7.1), hr = BK.hash2(19, y, 9.3);
+      if (hl > 0.55) g.fillRect(5 - ((hl * 3) | 0), y, 1, 1);
+      if (hr > 0.55) g.fillRect(16 + ((hr * 3) | 0), y, 1, 1);
     }
-    // 창백하게 빛나는 두 눈
+    // 머리 위 아지랑이
+    for (let x = 8; x < 15; x++) {
+      if (BK.hash2(x, 1, 3.3) > 0.6) g.fillRect(x, 1 + ((BK.hash2(x, 2, 4) * 2) | 0), 1, 1);
+    }
+    // 창백하게 빛나는 두 눈 + 후광
+    g.fillStyle = 'rgba(235,232,220,0.22)';
+    g.fillRect(8, 3, 3, 4); g.fillRect(12, 3, 3, 4);
     g.fillStyle = 'rgba(235,232,220,0.95)';
-    g.fillRect(9, 4, 1, 2); g.fillRect(12, 4, 1, 2);
+    g.fillRect(9, 4, 1, 2); g.fillRect(13, 4, 1, 2);
     return c;
   })();
 
-  // ---------- 벽의 얼굴 ----------
+  // ---------- 벽의 얼굴 — 벽지 밑에서 밀고 나오는, 눌린 천 같은 얼굴 ----------
   A.wallFaceFx = (() => {
     const c = mk(16, 20), g = c.getContext('2d');
-    const rg = g.createRadialGradient(8, 9, 1, 8, 10, 9);
-    rg.addColorStop(0, 'rgba(210,205,188,0.75)');
-    rg.addColorStop(1, 'rgba(210,205,188,0)');
+    const rg = g.createRadialGradient(8, 9, 1, 8, 10, 9.5);
+    rg.addColorStop(0, 'rgba(214,208,190,0.8)');
+    rg.addColorStop(0.7, 'rgba(214,208,190,0.3)');
+    rg.addColorStop(1, 'rgba(214,208,190,0)');
     g.fillStyle = rg; g.fillRect(0, 0, 16, 20);
-    g.fillStyle = 'rgba(8,6,5,0.8)';
-    g.beginPath(); g.ellipse(5.5, 8, 1.6, 2.6, 0, 0, Math.PI * 2); g.fill();   // 빈 눈
-    g.beginPath(); g.ellipse(10.5, 8, 1.6, 2.6, 0, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.ellipse(8, 14, 2, 3.4, 0, 0, Math.PI * 2); g.fill();      // 벌린 입
+    // 당겨지는 벽지 주름 (방사형)
+    g.strokeStyle = 'rgba(120,110,88,0.4)'; g.lineWidth = 0.8;
+    for (let i = 0; i < 6; i++) {
+      const a = i * 1.05 + 0.5;
+      g.beginPath();
+      g.moveTo(8 + Math.cos(a) * 3.6, 10 + Math.sin(a) * 3.6);
+      g.lineTo(8 + Math.cos(a) * 8.4, 10 + Math.sin(a) * 8.4);
+      g.stroke();
+    }
+    // 눈두덩/콧대 융기 하이라이트
+    g.fillStyle = 'rgba(242,238,222,0.55)';
+    g.fillRect(4, 5, 3, 1); g.fillRect(9, 5, 3, 1); g.fillRect(7, 9, 2, 3);
+    // 빈 눈 / 벌린 입 — 깊이 그라디언트
+    for (const [ex, ey2, rx, ry] of [[5.5, 8, 1.7, 2.7], [10.5, 8, 1.7, 2.7], [8, 14.2, 2.1, 3.6]]) {
+      const dg = g.createRadialGradient(ex, ey2, 0.4, ex, ey2, Math.max(rx, ry));
+      dg.addColorStop(0, 'rgba(4,3,2,0.95)');
+      dg.addColorStop(1, 'rgba(34,26,18,0.35)');
+      g.fillStyle = dg;
+      g.beginPath(); g.ellipse(ex, ey2, rx, ry, 0, 0, Math.PI * 2); g.fill();
+    }
     return c;
   })();
 
-  // ---------- 괴물 4종 (빛 안에서만 보인다 — 얼굴까지 몸체에 베이크) ----------
-  // 미소 짓는 것: 연기 같은 검은 기둥 + 하얀 미소
+  // ---------- 괴물 5종 (빛 안에서만 보인다 — 얼굴까지 몸체에 베이크) ----------
+  // 공통 조형 언어: 어둡고 탁한 몸체 + 단 하나의 창백한 발광부(눈/미소/입/균열).
+  // 사냥 프레임은 실루엣이 '벌어진다'(입·팔·보폭) — 어둠 가장자리에서도 상태가 읽힌다.
+  // 미소 짓는 것: 연기 기둥 — 3겹 밀도(보랏빛 헤이즈/몸통/심핵), 하얀 눈과 미소만 또렷하다
   function paintSmiler(hunt, frame) {
     const w = 20, h = 28, c = mk(w, h), g = c.getContext('2d');
     for (let y = 0; y < h; y++) {
       const t = y / h;
-      const halfW = 3 + t * 6;
+      const sway = Math.sin(t * 5.2 + frame * 2.6) * (1 - t) * 1.4; // 위쪽이 일렁인다
+      const cxx = w / 2 + sway;
+      const halfW = 2.8 + t * 6.2;
       for (let x = 0; x < w; x++) {
-        const dx = Math.abs(x - w / 2);
+        const dx = Math.abs(x - cxx);
         const hsh = BK.hash2(x, y, frame * 31.7 + (hunt ? 5 : 0));
-        if (dx < halfW - hsh * 2.4) {
-          g.fillStyle = `rgba(8,6,12,${0.7 + hsh * 0.3})`;
-          g.fillRect(x, y, 1, 1);
+        const edge = halfW - hsh * 2.4;
+        if (dx >= edge) {
+          if (dx < edge + 1.7 && hsh > 0.62) { // 흩어지는 연기 낱알
+            g.fillStyle = `rgba(44,34,62,${0.2 + hsh * 0.22})`;
+            g.fillRect(x, y, 1, 1);
+          }
+          continue;
         }
+        if (dx > edge - 1.6) g.fillStyle = `rgba(28,21,42,${0.5 + hsh * 0.3})`;       // 헤이즈 림
+        else if (dx > edge * 0.42) g.fillStyle = `rgba(11,8,18,${0.76 + hsh * 0.24})`; // 몸통
+        else g.fillStyle = `rgba(4,2,8,${0.88 + hsh * 0.12})`;                          // 심핵
+        g.fillRect(x, y, 1, 1);
       }
     }
-    const ey = 8;
-    g.fillStyle = 'rgba(253,248,224,0.3)';
-    g.fillRect(5, ey - 1, 4, hunt ? 5 : 4);
-    g.fillRect(11, ey - 1, 4, hunt ? 5 : 4);
+    // 머리에서 피어오르는 연기 가닥
+    g.fillStyle = 'rgba(36,28,54,0.55)';
+    g.fillRect(8 + frame, 0, 1, 2); g.fillRect(12 - frame, 1, 1, 1);
+    const ey = 8, eh = hunt ? 4 : 2; // 사냥 시 눈이 세로로 벌어진다
+    // 눈 후광 (어둠 속에서 번지는 안광)
+    g.fillStyle = 'rgba(253,248,224,0.18)';
+    g.fillRect(4, ey - 2, 5, eh + 4); g.fillRect(11, ey - 2, 5, eh + 4);
+    g.fillStyle = 'rgba(253,248,224,0.45)';
+    g.fillRect(5, ey - 1, 4, eh + 2); g.fillRect(12, ey - 1, 4, eh + 2);
+    // 눈 심지 + 백열 코어
     g.fillStyle = '#fdf8e0';
-    g.fillRect(6, ey, 2, hunt ? 3 : 2);
-    g.fillRect(12, ey, 2, hunt ? 3 : 2);
+    g.fillRect(6, ey, 2, eh); g.fillRect(13, ey, 2, eh);
+    g.fillStyle = '#ffffff';
+    g.fillRect(6, ey, 1, 1); g.fillRect(13, ey, 1, 1);
+    // 미소
     g.strokeStyle = '#fdf8e0';
-    g.lineWidth = hunt ? 2 : 1.3;
+    g.lineWidth = hunt ? 2.2 : 1.3;
     g.beginPath();
     g.arc(10, ey + 5, hunt ? 5.5 : 4.5, Math.PI * 0.12, Math.PI * 0.88);
     g.stroke();
-    return c;
-  }
-  // 눈 없는 것: 네 발로 기는 낮은 덩어리, 머리 자리에 세로로 갈라진 입
-  function paintCrawler(hunt, frame) {
-    const w = 24, h = 16, c = mk(w, h), g = c.getContext('2d');
-    for (let y = 3; y < 14; y++) {
-      for (let x = 1; x < 23; x++) {
-        const dx = (x - 12) / 11, dy = (y - 8.5) / 5.5;
-        const hsh = BK.hash2(x, y, frame * 17.3 + (hunt ? 3 : 0));
-        if (dx * dx + dy * dy < 1 - hsh * 0.25) {
-          g.fillStyle = `rgba(12,9,12,${0.75 + hsh * 0.25})`;
-          g.fillRect(x, y, 1, 1);
-        }
+    if (hunt) {
+      // 이빨 사이 골 — 발각 플래시로 크게 비칠 때 미소가 '입'으로 읽힌다
+      g.fillStyle = 'rgba(8,6,12,0.8)';
+      for (let i = -2; i <= 2; i++) {
+        const a = Math.PI * 0.5 + i * 0.17;
+        g.fillRect(Math.round(10 + Math.cos(a) * 5.5), Math.round(ey + 5 + Math.sin(a) * 5.2) - 1, 1, 2);
       }
-    }
-    // 등뼈 융기
-    g.fillStyle = '#6a6055';
-    for (const sx of [5, 9, 13, 17]) g.fillRect(sx, 3 + ((frame + sx) % 2), 1, 1);
-    // 꺾인 다리 (프레임마다 교차)
-    g.strokeStyle = '#0c090c';
-    g.lineWidth = 1.6;
-    const lp = frame ? 1 : -1;
-    for (const [bx, by, ex, eyy] of [
-      [4, 11, 1 - lp, 15], [9, 12, 6 + lp, 16],
-      [15, 12, 18 - lp, 16], [20, 11, 23 + lp, 15],
-    ]) {
-      g.beginPath(); g.moveTo(bx, by); g.lineTo(ex, eyy); g.stroke();
-    }
-    // 세로로 갈라진 창백한 입 (눈은 없다)
-    if (hunt) {
-      g.fillStyle = '#d8d0c4';
-      g.fillRect(18, 5, 3, 6);
-      g.fillStyle = '#1a0608';
-      g.fillRect(19, 6, 1, 4);
-      g.fillStyle = '#d8d0c4';
-      g.fillRect(19, 7, 1, 1); // 이빨
-    } else {
-      g.fillStyle = '#b8b0a4';
-      g.fillRect(19, 6, 1, 4);
+      // 찢어지는 입꼬리
+      g.strokeStyle = 'rgba(253,248,224,0.85)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(4.6, ey + 6.4); g.lineTo(3.2, ey + 4.6); g.stroke();
+      g.beginPath(); g.moveTo(15.4, ey + 6.4); g.lineTo(16.8, ey + 4.6); g.stroke();
     }
     return c;
   }
-  // 광대: 빛바랜 광대옷, 하얀 분칠 얼굴, X자 눈, 그려진 미소
+  // 눈 없는 것: 등이 굽은 네 발 짐승 — 무릎이 등 위로 솟는 잘못된 관절.
+  // 머리는 매끈하고 눈이 없다. 세로로 갈라진 창백한 입만이 빛난다.
+  function paintCrawler(hunt, frame) {
+    const w = 26, h = 18, c = mk(w, h), g = c.getContext('2d');
+    const R = (x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); };
+    const lp = frame ? 1 : -1;                 // 다리 교차
+    const drop = hunt ? 1 : 0;                 // 사냥: 자세가 낮아진다
+    const stride = hunt ? 2 : 1;               // 사냥: 보폭이 벌어진다
+    const HIDE = '#241c22', HIDE2 = '#372d33', RIM = '#5a4a50', BONE = '#c6baa8';
+    const spineY = (x) => 4.6 + drop + Math.pow(Math.abs((x - 10) / 9), 1.8) * 3.6;
+    const bellyY = (x) => 13.8 - Math.pow(Math.abs((x - 11) / 9.5), 2) * 2.2;
+    function leg(hx, hy, kx, ky, fx, fy, col, lw) {
+      g.strokeStyle = col; g.lineWidth = lw; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); g.moveTo(hx, hy); g.lineTo(kx, ky); g.lineTo(fx, fy); g.stroke();
+      g.fillStyle = col; g.fillRect(fx - 1, fy - 1, 3, 1); // 발가락
+    }
+    // 먼 쪽 다리 (몸 뒤 — 더 어둡게)
+    leg(8, 10 + drop, 6 - lp, 3 + drop, 5 - lp * stride, 16, '#130e12', 1.4);
+    leg(14, 10 + drop, 17 + lp, 3 + drop, 19 - lp * stride, 16, '#130e12', 1.4);
+    // 몸통 — 굽은 등, 처진 배 (가장자리는 해시로 뜯긴다)
+    for (let x = 2; x <= 20; x++) {
+      const sp = spineY(x), be = bellyY(x);
+      for (let y = Math.round(sp); y <= be; y++) {
+        const hsh = BK.hash2(x, y, frame * 17.3 + (hunt ? 3 : 0));
+        if (y < sp + 0.8 && hsh > 0.8) continue;             // 등선 뜯김
+        if (y < sp + 2) g.fillStyle = HIDE2;
+        else if (y > be - 1.4) g.fillStyle = '#161014';       // 배 밑 그늘
+        else g.fillStyle = HIDE;
+        g.fillRect(x, y, 1, 1);
+      }
+      // 등선 림 라이트
+      if (BK.hash2(x, 0, 5.5) > 0.25) { g.fillStyle = RIM; g.fillRect(x, Math.round(sp), 1, 1); }
+    }
+    // 갈비 융기 (옆구리 결)
+    g.fillStyle = 'rgba(92,78,82,0.45)';
+    for (let i = 0; i < 4; i++) { const x = 5 + i * 4; g.fillRect(x, Math.round(spineY(x)) + 2, 1, 3); }
+    // 등뼈 가시 — 살을 뚫고 나온 창백한 돌기
+    for (let i = 0; i < 5; i++) {
+      const x = 4 + i * 3 + ((frame + i) % 2);
+      const sp = Math.round(spineY(x));
+      R(x, sp - 1, 1, 1, BONE);
+      R(x, sp, 1, 1, '#8a7c6c');
+    }
+    // 가까운 쪽 다리 — 무릎 뼈마디가 하얗게 도드라진다
+    leg(6, 11 + drop, 3 + lp, 4 + drop, 2 - lp * stride, 16, '#2c2228', 1.6);
+    R(3 + lp, 3 + drop, 1, 1, BONE);
+    leg(16, 11 + drop, 20 - lp, 4 + drop, 22 + lp * stride, 16, '#2c2228', 1.6);
+    R(20 - lp, 3 + drop, 1, 1, BONE);
+    // 목~머리 (오른쪽) — 매끈한 쐐기, 눈이 없다
+    R(20, 5 + drop, 3, 1, HIDE2);
+    R(19, 6 + drop, 6, 1, HIDE2);
+    R(18, 7 + drop, 8, 2, HIDE);
+    R(19, 9 + drop, 6, 1, '#1a1318');
+    R(20, 10 + drop, 4, 1, '#161014');
+    R(19, 5 + drop, 2, 1, RIM);                       // 정수리 림 (입 실금과 겹치지 않게)
+    if (hunt) {
+      // 턱이 빠지도록 세로로 쩍 갈라진 입 — 구멍이 머리보다 길게 찢어진다
+      R(20, 4 + drop, 7, 9, 'rgba(198,186,168,0.12)'); // 후광
+      R(22, 5 + drop, 3, 6, '#0d0509');                 // 세로 구멍
+      R(23, 4 + drop, 1, 8, '#0d0509');                 // 위아래로 더 찢어진 중심선
+      R(23, 6 + drop, 1, 4, '#2a080c');                 // 인후
+      R(21, 6 + drop, 1, 3, 'rgba(198,186,168,0.5)');   // 벌어진 살 가장자리
+      R(25, 6 + drop, 1, 3, 'rgba(198,186,168,0.5)');
+      R(22, 6 + drop, 1, 1, BONE); R(24, 8 + drop, 1, 1, BONE); R(22, 9 + drop, 1, 1, BONE); // 어긋난 이빨
+      if (frame) R(23, 12 + drop, 1, 2, 'rgba(210,205,190,0.45)'); // 침
+    } else {
+      R(23, 6 + drop, 1, 4, '#b8b0a4');                // 다문 입 — 창백한 실금
+      R(23, 7 + drop, 1, 1, '#d8d0c4');
+    }
+    return c;
+  }
+  // 광대: 빛바랜 헐렁한 광대옷 + 갈라진 분칠. 그려진 미소가 사냥 때 진짜로 찢어진다.
   function paintClown(hunt, frame) {
-    const w = 18, h = 28, c = mk(w, h), g = c.getContext('2d');
+    const w = 20, h = 30, c = mk(w, h), g = c.getContext('2d');
     const R = (x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); };
-    const bob = frame ? 1 : 0;
-    // 다리/신발
-    R(5, 22, 3, 4, '#3a2026'); R(10, 22, 3, 4, '#3a2026');
-    R(2, 26, 6, 2, '#7a1f1f'); R(10, 26, 6, 2, '#7a1f1f'); // 뾰족 신발
-    // 몸통 (얼룩진 광대옷 + 물방울)
-    R(4, 10 + bob, 10, 12 - bob, '#4a2a30');
-    for (let y = 11; y < 21; y++) for (let x = 5; x < 13; x++) {
-      if (BK.hash2(x, y, 9.9) > 0.88) { g.fillStyle = '#a8923f'; g.fillRect(x, y, 1, 1); }
+    const b = frame ? 1 : 0;
+    const SUIT = '#5c3038', SUITD = '#3f2127', SUITL = '#7a444d', DOT = '#ab9340',
+      RUFF = '#cfc6b2', RUFFD = '#98917e', PAINT = '#eae4d9', PAINTD = '#c2b9a9',
+      HAIR = '#47692f', HAIRD = '#2f4a1e', GLOVE = '#ded8cc', DARK = '#170608', REDL = '#8a1a1a';
+    // 뾰족 신발
+    R(2, 27, 6, 2, '#6e2020'); R(12, 27, 6, 2, '#6e2020');
+    R(2, 29, 6, 1, '#471313'); R(12, 29, 6, 1, '#471313');
+    R(1, 28, 1, 1, '#6e2020'); R(18, 28, 1, 1, '#6e2020');
+    R(2, 27, 6, 1, '#8a2c2c'); R(12, 27, 6, 1, '#8a2c2c');
+    // 다리
+    R(6, 23, 3, 4, SUITD); R(11, 23, 3, 4, SUITD);
+    // 헐렁한 광대옷 — 골반이 넓다
+    R(4, 17 + b, 12, 6 - b, SUIT);
+    R(5, 11 + b, 10, 7, SUIT);
+    R(5, 12 + b, 1, 9, SUITL);                    // 왼쪽 하이라이트
+    R(13, 12 + b, 2, 10, SUITD);                  // 오른쪽 음영
+    R(4, 22, 12, 1, 'rgba(20,10,12,0.4)');        // 밑단 얼룩
+    // 물방울 무늬 + 기운 헝겊
+    for (let y = 12 + b; y < 22; y++) for (let x = 5; x < 15; x++) {
+      if (BK.hash2(x, y, 9.9) > 0.9) { g.fillStyle = DOT; g.fillRect(x, y, 1, 1); }
     }
-    // 팔 (돌진 시 벌림)
+    R(11, 19 + b, 3, 2, DOT); R(11, 19 + b, 1, 1, '#6a5a28'); R(13, 20 + b, 1, 1, '#6a5a28');
+    // 가슴 방울 단추
+    R(9, 13 + b, 2, 2, DARK); R(9, 13 + b, 1, 1, '#3a2a30');
+    R(9, 17 + b, 2, 2, DARK); R(9, 17 + b, 1, 1, '#3a2a30');
+    // 팔 (돌진 시 활짝 벌린다)
     if (hunt) {
-      R(1, 9 + bob, 3, 2, '#4a2a30'); R(14, 9 + bob, 3, 2, '#4a2a30');
-      R(0, 8 + bob, 2, 2, '#e8e2da'); R(16, 8 + bob, 2, 2, '#e8e2da');
+      R(0, 12 + b, 5, 2, SUIT); R(15, 12 + b, 5, 2, SUIT);
+      R(0, 13 + b, 5, 1, SUITD); R(15, 13 + b, 5, 1, SUITD);
+      R(0, 11 - b, 2, 3, GLOVE); R(18, 11 - b, 2, 3, GLOVE);       // 장갑
+      R(0, 10 - b, 1, 1, GLOVE); R(1, 14 - b, 1, 1, GLOVE);        // 벌린 손가락
+      R(19, 10 - b, 1, 1, GLOVE); R(18, 14 - b, 1, 1, GLOVE);
     } else {
-      R(3, 12 + bob, 1, 6, '#4a2a30'); R(14, 12 + bob, 1, 6, '#4a2a30');
+      R(3, 12 + b, 2, 7, SUIT); R(15, 12 + b, 2, 7, SUIT);
+      R(4, 12 + b, 1, 7, SUITD); R(15, 12 + b, 1, 7, SUITD);
+      R(2, 19 + b, 3, 1, RUFF); R(15, 19 + b, 3, 1, RUFF);          // 소맷단 러프
+      R(2, 20 + b, 3, 2, GLOVE); R(15, 20 + b, 3, 2, GLOVE);        // 늘어진 장갑
+      R(2, 22 + b, 1, 1, GLOVE); R(4, 22 + b, 1, 1, GLOVE);
+      R(15, 22 + b, 1, 1, GLOVE); R(17, 22 + b, 1, 1, GLOVE);
     }
-    // 목 주름 장식
-    for (let x = 4; x < 14; x++) R(x, 9 + bob + (x % 2), 1, 1, '#c8c0ae');
-    // 머리 (분칠)
-    R(4, 1 + bob, 10, 8, '#e8e2da');
-    R(5, 0 + bob, 8, 2, '#e8e2da');
+    // 목 러프 칼라 — 지그재그 두 겹
+    R(4, 10 + b, 12, 1, RUFF);
+    for (let x = 4; x < 16; x++) R(x, 10 + b + (x % 2), 1, 1, x % 2 ? RUFFD : RUFF);
+    // 머리 — 분칠한 큰 얼굴
+    R(4, 1 + b, 12, 9, PAINT);
+    R(5, 0 + b, 10, 1, PAINT);
+    R(13, 2 + b, 3, 8, PAINTD);                   // 오른쪽 음영
+    R(6, 10 + b, 8, 1, PAINTD);                   // 턱
+    // 분칠 균열
+    g.fillStyle = '#a2988a';
+    g.fillRect(12, 1 + b, 1, 3); g.fillRect(5, 8 + b, 2, 1); g.fillRect(14, 6 + b, 1, 2);
     // 헝클어진 초록 머리칼
-    R(2, 2 + bob, 2, 4, '#4a6a3a'); R(14, 2 + bob, 2, 4, '#4a6a3a');
-    R(3, 1 + bob, 1, 2, '#4a6a3a'); R(14, 1 + bob, 1, 2, '#4a6a3a');
-    // X자 눈
-    g.fillStyle = '#15080a';
-    for (const ex of [6, 11]) {
-      g.fillRect(ex - 1, 2 + bob, 1, 1); g.fillRect(ex + 1, 2 + bob, 1, 1);
-      g.fillRect(ex, 3 + bob, 1, 1);
-      g.fillRect(ex - 1, 4 + bob, 1, 1); g.fillRect(ex + 1, 4 + bob, 1, 1);
+    R(2, 1 + b, 2, 5, HAIR); R(16, 1 + b, 2, 5, HAIR);
+    R(4, 0 + b, 2, 2, HAIR); R(9, 0 + b, 2, 1, HAIRD); R(14, 0 + b, 2, 2, HAIR);
+    R(2, 3 + b, 1, 2, HAIRD); R(17, 3 + b, 1, 2, HAIRD);
+    if (hunt) { R(1, 0, 1, 3, HAIR); R(18, 0, 1, 3, HAIR); }        // 폭주 — 곤두선 머리
+    // X자 눈 (사냥 시 가운데 핏빛 점광)
+    g.fillStyle = DARK;
+    for (const ex of [7, 12]) {
+      g.fillRect(ex - 1, 3 + b, 1, 1); g.fillRect(ex + 1, 3 + b, 1, 1);
+      g.fillRect(ex, 4 + b, 1, 1);
+      g.fillRect(ex - 1, 5 + b, 1, 1); g.fillRect(ex + 1, 5 + b, 1, 1);
+      g.fillStyle = 'rgba(120,90,80,0.6)'; g.fillRect(ex, 6 + b, 1, 3); // 그을린 눈물 자국
+      g.fillStyle = DARK;
     }
-    // 빨간 코 + 그려진 미소 (사냥 시 더 크게)
-    R(8, 4 + bob, 2, 2, '#b03030');
-    g.strokeStyle = '#b03030';
-    g.lineWidth = hunt ? 1.8 : 1.2;
-    g.beginPath();
-    g.arc(9, 5.5 + bob, hunt ? 4.2 : 3.2, Math.PI * 0.15, Math.PI * 0.85);
-    g.stroke();
-    if (hunt) { // 찢어진 입꼬리
-      g.beginPath(); g.moveTo(5, 7.5 + bob); g.lineTo(4, 6 + bob); g.stroke();
-      g.beginPath(); g.moveTo(13, 7.5 + bob); g.lineTo(14, 6 + bob); g.stroke();
+    if (hunt) { R(7, 4 + b, 1, 1, '#ff4040'); R(12, 4 + b, 1, 1, '#ff4040'); }
+    if (hunt) {
+      // 코 (들려 올라감)
+      R(9, 4 + b, 2, 2, '#c23434'); R(9, 4 + b, 1, 1, '#ea6a56');
+      // 찢어져 벌어진 입 — 분칠을 뚫고 나온 진짜 입
+      R(7, 6 + b, 6, 1, DARK);
+      R(6, 7 + b, 8, 4, DARK);
+      R(8, 8 + b, 4, 2, '#310a0e');                                  // 인후
+      g.fillStyle = '#e8dec6';
+      g.fillRect(7, 7 + b, 1, 1); g.fillRect(9, 7 + b, 1, 1); g.fillRect(11, 7 + b, 1, 1); g.fillRect(13, 7 + b, 1, 1);
+      g.fillRect(8, 10 + b, 1, 1); g.fillRect(10, 10 + b, 1, 1); g.fillRect(12, 10 + b, 1, 1);
+      // 입꼬리를 타고 올라가는 상처
+      g.strokeStyle = REDL; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(6, 7.5 + b); g.lineTo(4, 5.5 + b); g.stroke();
+      g.beginPath(); g.moveTo(14, 7.5 + b); g.lineTo(16, 5.5 + b); g.stroke();
+    } else {
+      // 코 + 그려진 미소
+      R(9, 5 + b, 2, 2, '#c23434'); R(9, 5 + b, 1, 1, '#ea6a56');
+      g.strokeStyle = REDL; g.lineWidth = 1.2;
+      g.beginPath(); g.arc(10, 6.5 + b, 3.2, Math.PI * 0.18, Math.PI * 0.82); g.stroke();
+      g.fillStyle = REDL; g.fillRect(6, 7 + b, 1, 1); g.fillRect(13, 7 + b, 1, 1); // 올라간 입꼬리
     }
     return c;
   }
-  // 우는 아이: 작고 창백한, 텅 빈 눈
+  // 우는 아이: 머리칼이 얼굴을 덮은 작은 형체 — 비명 때 고개가 꺾여 올라가며 얼굴이 찢어진다
   function paintChild(scream, frame) {
-    const w = 12, h = 16, c = mk(w, h), g = c.getContext('2d');
+    const w = 14, h = 18, c = mk(w, h), g = c.getContext('2d');
     const R = (x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); };
-    const sway = frame ? 1 : 0;
-    // 다리 (맨발)
-    R(4, 13, 1, 2, '#cfc9bd'); R(7, 13, 1, 2, '#cfc9bd');
-    // 해진 원피스
-    R(3, 7, 6, 6, '#5f584c');
-    R(2, 11, 1, 2, '#5f584c'); R(9, 11, 1, 2, '#5f584c');
-    // 팔
-    R(2, 8, 1, 3, '#cfc9bd'); R(9, 8, 1, 3, '#cfc9bd');
-    // 고개 숙인 머리
-    R(3 + sway, 1, 6, 6, '#cfc9bd');
-    R(2 + sway, 0, 8, 3, '#2a241e'); // 헝클어진 머리칼
-    R(2 + sway, 3, 1, 3, '#2a241e'); R(9 + sway, 3, 1, 2, '#2a241e');
-    // 텅 빈 눈
-    if (scream) {
-      R(4 + sway, 3, 2, 3, '#0c0a08'); R(7 + sway, 3, 2, 3, '#0c0a08');
-      R(5 + sway, 6, 3, 3, '#0c0a08'); // 벌어진 입
+    const s = frame ? 1 : 0;
+    const SKIN = '#cfc5b6', SKIND = '#a89e90', GOWN = '#645b4f', GOWND = '#463f36',
+      HAIR = '#221d19', TEAR = 'rgba(12,9,9,0.85)';
+    if (!scream) {
+      // 맨발
+      R(4, 16, 1, 1, SKIN); R(8, 16, 1, 1, SKIN);
+      // 해진 원피스
+      R(3, 8, 8, 8, GOWN);
+      R(9, 9, 2, 7, GOWND);
+      R(3, 8, 1, 7, '#6f665a');
+      g.clearRect(4, 15, 1, 1); g.clearRect(7, 15, 1, 1); g.clearRect(10, 15, 1, 1); // 뜯긴 밑단
+      R(5, 12, 1, 1, GOWND); R(8, 13, 1, 1, GOWND);                                  // 얼룩
+      // 늘어뜨린 팔
+      R(2, 9, 1, 4, SKIN); R(11, 9, 1, 4, SKIN);
+      R(2, 8, 1, 2, GOWND); R(11, 8, 1, 2, GOWND);
+      // 고개 숙인 머리 — 머리칼 커튼이 얼굴을 가린다
+      R(4 + s, 5, 5, 3, SKIN);
+      R(2 + s, 1, 9, 4, HAIR);
+      R(3 + s, 0, 7, 1, HAIR);
+      R(2 + s, 5, 1, 3, HAIR); R(10 + s, 5, 1, 2, HAIR);   // 옆 커튼
+      R(4 + s, 2, 1, 1, '#3d352f'); R(8 + s, 1, 1, 1, '#3d352f'); // 머릿결
+      R(4 + s, 5, 5, 1, 'rgba(12,9,8,0.75)');              // 눈가 그늘
+      // 그늘 밑으로 새는 검은 눈물
+      R(5 + s, 6, 1, 3, TEAR); R(8 + s, 6, 1, 2, TEAR);
+      R(5 + s, 9, 1, 2, 'rgba(12,9,9,0.4)');
+      R(6 + s, 7, 2, 1, '#4a3a34');                         // 앙다문 입
+      // 떨어지는 눈물 한 방울
+      R(6 + s, 10 + frame * 3, 1, 1, 'rgba(12,9,9,0.6)');
     } else {
-      R(4 + sway, 4, 2, 2, '#0c0a08'); R(7 + sway, 4, 2, 2, '#0c0a08');
-      R(5 + sway, 7, 2, 1, '#3a3026');
-      // 검은 눈물 줄기
-      R(4 + sway, 6, 1, 2, 'rgba(12,10,8,0.7)');
-      R(8 + sway, 6, 1, 1, 'rgba(12,10,8,0.7)');
+      // 비명 — 소리의 파문
+      g.fillStyle = 'rgba(30,24,28,0.4)';
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + frame * 0.4;
+        g.fillRect(Math.round(7 + Math.cos(a) * (6 + frame)), Math.round(5 + Math.sin(a) * (5 + frame)), 1, 1);
+      }
+      // 맨발 (떠오르듯 곤두선)
+      R(4, 16, 1, 1, SKIN); R(8, 16, 1, 1, SKIN);
+      // 원피스 자락이 나부낀다
+      R(3, 8, 8, 8, GOWN);
+      R(9, 9, 2, 7, GOWND);
+      g.clearRect(5, 15, 1, 1); g.clearRect(8, 15, 1, 1);
+      R(2, 14, 1, 1, GOWN); R(11, 14, 1, 1, GOWN);
+      // 뻣뻣하게 벌린 팔 + 벌어진 손가락
+      R(1, 8, 1, 4, SKIN); R(12, 8, 1, 4, SKIN);
+      R(0, 12, 1, 1, SKIN); R(2, 12, 1, 1, SKIN);
+      R(11, 12, 1, 1, SKIN); R(13, 12, 1, 1, SKIN);
+      // 꺾여 올라간 얼굴 — 머리칼이 뒤로 쏟아진다
+      R(4, 3, 6, 5, SKIN);
+      R(3, 0, 8, 3, HAIR);
+      R(1, 1, 2, 2, HAIR); R(11, 1, 2, 2, HAIR);           // 흩날리는 머리칼
+      R(2, 4, 1, 2, HAIR); R(11, 4, 1, 2, HAIR);
+      R(4, 3, 6, 1, 'rgba(12,9,8,0.5)');                    // 이마 그늘
+      // 텅 빈 눈구멍 + 바닥의 흐릿한 반사
+      R(4, 4, 2, 2, '#0b0808'); R(8, 4, 2, 2, '#0b0808');
+      R(5, 5, 1, 1, 'rgba(200,190,180,0.5)'); R(9, 5, 1, 1, 'rgba(200,190,180,0.5)');
+      // 턱이 빠지도록 벌어진 입 — 얼굴 절반이 구멍
+      R(5, 6, 4, 4, '#0b0608');
+      R(6, 10, 2, 1, '#0b0608');
+      R(6, 8, 2, 1, '#2a0a0e');                             // 인후
+      R(4, 8, 1, 2, SKIND); R(9, 8, 1, 2, SKIND);           // 당겨진 볼가죽
+      // 쏟아지는 검은 눈물
+      R(4, 6, 1, 5, TEAR); R(9, 6, 1, 5, TEAR);
+      R(4, 11, 1, 3, 'rgba(12,9,9,0.4)'); R(9, 11, 1, 3, 'rgba(12,9,9,0.4)');
     }
     return c;
   }
-  // 꺼진 것: 빛이 닿으면 굳는 잿빛 사람. idle=굳은 석상(빛 속에서 보이는 형태), moving=한 발 내딛는 순간
+  // 꺼진 것: 빛이 닿으면 굳는 잿빛 석상 — 균열마다 차가운 빛이 고여 있다.
+  // idle=굳은 석상(미동 없음, 균열의 빛만 숨쉰다), moving=앞으로 기울어 손을 뻗는 순간
   function paintShade(moving, frame) {
-    const w = 16, h = 30, c = mk(w, h), g = c.getContext('2d');
+    const w = 18, h = 32, c = mk(w, h), g = c.getContext('2d');
     const R = (x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); };
-    // 차갑게 굳은 슬레이트빛 — 따뜻한 콘크리트 위에서 또렷이 떠 보이게
-    const ASH = '#565562', ASHD = '#33323d', ASHL = '#8f8e9e', CRACK = '#1a1920';
+    const ASH = '#4e4d59', ASHD = '#2f2e38', ASHL = '#8d8c9c', CRACK = '#131218';
+    const glowA = moving ? 0.9 : (frame ? 0.4 : 0.26);   // 균열 속 빛 — 움직일 때 타오른다
+    const GLOW = `rgba(226,231,212,${glowA})`;
     const stride = moving ? (frame ? 2 : -2) : 0;
-    // 다리 (걸을 땐 한 발 앞으로 — 한 발 내딛는 순간)
-    R(5 - stride, 22, 2, 8, ASH); R(9 + stride, 22, 2, 8, ASH);
-    R(4 - stride, 29, 3, 1, ASHD); R(9 + stride, 29, 3, 1, ASHD); // 발
-    // 몸통 — 마르고 약간 굽음
-    R(4, 11, 8, 12, ASH);
-    R(4, 11, 8, 1, ASHL);            // 어깨 하이라이트
-    R(4, 16, 8, 1, ASHD);
-    // 앞으로 뻗은 팔 (잡으려는 손)
+    const hd = moving ? 1 : 0;                            // 사냥: 고개가 앞으로 떨어진다
+    // 다리 + 발
+    R(5 - stride, 23, 2, 7, ASH); R(11 + stride, 23, 2, 7, ASH);
+    R(6 - stride, 23, 1, 7, ASHD); R(12 + stride, 23, 1, 7, ASHD);
+    R(4 - stride, 30, 3, 2, ASHD); R(11 + stride, 30, 3, 2, ASHD);
+    // 몸통 — 마르고 굽은 어깨
+    R(4, 12, 10, 11, ASH);
+    R(4, 12, 10, 1, ASHL);
+    R(4, 13, 1, 10, '#6f6e7c');                           // 왼쪽 림
+    R(12, 13, 2, 10, ASHD);
+    R(5, 17, 8, 1, ASHD);                                 // 허리 골
     if (moving) {
-      R(2, 12, 3, 2, ASH); R(11, 12, 3, 2, ASH);
-      R(1, 13, 2, 2, ASHL); R(13, 13, 2, 2, ASHL); // 뻗은 손끝
+      // 뻗는 팔 — 관절째 들려 화면 쪽으로 (손이 커진다)
+      R(1, 13, 3, 2, ASH); R(14, 13, 3, 2, ASH);
+      R(1, 14, 2, 2, ASHD); R(15, 14, 2, 2, ASHD);
+      R(0, 16, 3, 3, ASH); R(15, 16, 3, 3, ASH);
+      R(0, 16, 3, 1, ASHL); R(15, 16, 3, 1, ASHL);
+      R(0, 19, 1, 2, ASH); R(2, 19, 1, 3, ASH);           // 벌어진 돌 손가락
+      R(15, 19, 1, 3, ASH); R(17, 19, 1, 2, ASH);
     } else {
-      R(3, 12, 1, 8, ASH); R(12, 12, 1, 8, ASH);    // 굳어 늘어뜨린 팔
-      R(3, 19, 1, 2, ASHL); R(12, 19, 1, 2, ASHL);
+      // 굳어 늘어뜨린 팔
+      R(2, 13, 2, 9, ASH); R(14, 13, 2, 9, ASH);
+      R(3, 13, 1, 9, ASHD); R(14, 13, 1, 9, ASHD);
+      R(2, 22, 2, 2, ASHD); R(14, 22, 2, 2, ASHD);
+      R(2, 24, 1, 2, ASH); R(3, 24, 1, 1, ASH);           // 손가락
+      R(15, 24, 1, 2, ASH); R(14, 24, 1, 1, ASH);
     }
-    // 머리 — 텅 빈 잿빛 얼굴
-    R(5, 4, 6, 7, ASH);
-    R(5, 4, 6, 1, ASHL);
-    R(5, 9, 6, 1, ASHD);
-    // 텅 빈 눈구멍 + 그 안에서 흐릿하게 빛나는 눈 (어둠 가장자리에서도 얼굴이 읽힌다)
-    R(6, 6, 2, 2, '#0a090c'); R(9, 6, 2, 2, '#0a090c');
-    R(6, 6, 1, 1, 'rgba(220,224,210,0.9)'); R(10, 6, 1, 1, 'rgba(220,224,210,0.9)');
-    R(7, 9, 3, 1, '#0a090c'); // 살짝 벌린 입
-    // 빛이 새긴 균열
-    R(8, 4, 1, 7, CRACK); R(6, 13, 4, 1, CRACK); R(5, 18, 3, 1, CRACK);
-    R(9, 20, 2, 3, CRACK);
-    // 잿가루 너덜거림
-    for (let y = 5; y < 28; y++) {
-      if (BK.hash2(3, y, moving ? 4.4 : 1.1) > 0.7) g.fillStyle = ASHD, g.fillRect(3, y, 1, 1);
-      if (BK.hash2(12, y, moving ? 5.5 : 2.2) > 0.7) g.fillStyle = ASHD, g.fillRect(12, y, 1, 1);
+    // 머리
+    R(5, 4 + hd, 7, 8, ASH);
+    R(5, 4 + hd, 7, 1, ASHL);
+    R(11, 5 + hd, 1, 7, ASHD);
+    // 텅 빈 눈구멍 + 그 안의 빛
+    if (moving) R(5, 6 + hd, 8, 3, 'rgba(226,231,212,0.14)'); // 안광 후광
+    R(6, 7 + hd, 2, 2, '#0a090e'); R(9, 7 + hd, 2, 2, '#0a090e');
+    R(6, 7 + hd, 1, 1, GLOW); R(9, 7 + hd, 1, 1, GLOW);
+    // 입 — 굳으면 실금, 움직이면 벌어진 구멍
+    if (moving) { R(7, 10 + hd, 3, 2, '#0a090e'); R(8, 11 + hd, 1, 1, GLOW); }
+    else R(7, 10 + hd, 3, 1, '#0a090e');
+    // 몸을 가르는 균열 — 심지에서 빛이 샌다
+    R(8, 4 + hd, 1, 4, CRACK); R(8, 5 + hd, 1, 1, GLOW);
+    R(6, 14, 4, 1, CRACK); R(7, 14, 1, 1, GLOW);
+    R(9, 15, 1, 3, CRACK); R(9, 16, 1, 1, GLOW);
+    R(5, 19, 3, 1, CRACK);
+    R(11 + stride, 25, 1, 3, CRACK); R(11 + stride, 26, 1, 1, GLOW);
+    // 풍화 자국 (파임/빛바램)
+    for (let y = 5; y < 23; y++) for (let x = 4; x < 14; x++) {
+      const hsh = BK.hash2(x, y, 6.6);
+      if (hsh > 0.94) { g.fillStyle = ASHD; g.fillRect(x, y, 1, 1); }
+      else if (hsh < 0.02) { g.fillStyle = ASHL; g.fillRect(x, y, 1, 1); }
+    }
+    if (moving) {
+      // 움직이는 동안 떨어져 나가는 잿가루
+      g.fillStyle = 'rgba(120,118,132,0.6)';
+      for (let i = 0; i < 6; i++) {
+        const hx = BK.hash2(i, frame, 8.8), hy = BK.hash2(i, frame, 9.9);
+        g.fillRect(2 + ((hx * 14) | 0), 2 + ((hy * 8) | 0), 1, 1);
+      }
     }
     return c;
   }

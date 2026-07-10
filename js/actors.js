@@ -91,14 +91,14 @@ BK.MON_SPEC = {
   },
   // 눈 없는 것(크롤러): 장님, 소리로만 사냥, 매우 빠름 → 멈춰야 산다
   crawler: {
-    spriteW: 24, spriteH: 16, dy: -14, hit: 8,
+    spriteW: 26, spriteH: 18, dy: -16, hit: 8,
     roam: 30, inv: 70, hunt: 96,
     sight: 0, hearWalk: 150, hearRun: 360,
     blind: true, catchStun: false,
   },
   // 광대: 발견 시 경직 후 폭주 돌진, 지치면 휴식
   clown: {
-    spriteW: 18, spriteH: 28, dy: -26, hit: 9,
+    spriteW: 20, spriteH: 30, dy: -28, hit: 9,
     roam: 30, inv: 50, hunt: 58,
     sight: 200, hearWalk: 70, hearRun: 200,
     blind: false, catchStun: false,
@@ -106,14 +106,14 @@ BK.MON_SPEC = {
   },
   // 우는 아이: 느림, 안 죽임 — 다가가면 비명(기절+소집), 울음이 미끼
   child: {
-    spriteW: 12, spriteH: 16, dy: -14, hit: 11,
+    spriteW: 14, spriteH: 18, dy: -16, hit: 11,
     roam: 18, inv: 22, hunt: 26,
     sight: 70, hearWalk: 0, hearRun: 60,
     blind: false, catchStun: true, screamRange: 30, screamCD: 8,
   },
   // 꺼진 것: 어둠/화면 밖에서만 전진, 빛이 닿으면 굳는다 → 빛에서 떼지 마라
   shade: {
-    spriteW: 16, spriteH: 30, dy: -28, hit: 9,
+    spriteW: 18, spriteH: 32, dy: -30, hit: 9,
     roam: 0, inv: 0, hunt: 56,
     sight: 9999, hearWalk: 9999, hearRun: 9999, // 항상 위치를 안다 (소리/시야 무관)
     blind: false, catchStun: false,
@@ -541,7 +541,7 @@ BK.Monster = class {
     if (down) base = 0;
     const spr = BK.assets.mon[this.kind][base + this.frame];
     g.globalAlpha = lightAlpha * (down ? 0.7 : 0.96);
-    g.drawImage(spr, sx - (spec.spriteW >> 1), sy + spec.dy + (down ? 11 : 0));
+    g.drawImage(spr, sx - (spec.spriteW >> 1), sy + spec.dy + (down ? 12 : 0));
     g.globalAlpha = 1;
   }
 };

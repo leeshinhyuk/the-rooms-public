@@ -10,6 +10,7 @@
   const jbx = jumpBuf.getContext('2d');
   const overlay = document.getElementById('overlay');
   const S = BK.SCALE, VW = BK.VIEW_W, VH = BK.VIEW_H, T = BK.TILE;
+  const touchMode = matchMedia('(pointer: coarse), (max-width: 760px)').matches || navigator.maxTouchPoints > 0;
   dctx.imageSmoothingEnabled = false;
 
   BK.buildAssets();
@@ -36,33 +37,33 @@
   const BRO_NAME = '레오';
   const NOTE_TEXTS = [
     // LEVEL 0 (0~4) — 죄책감으로 들어옴 + 루프 단서의 시작
-    '실내 놀이방. 생일 노래가 끝나고, 아이들이 케이크 앞으로 몰려갔다.\n나는 그 애 손을 잡고 있었다. 잠깐 — 정말 잠깐 휴대폰 화면을 봤을 뿐인데.\n다시 고개를 들었을 때, 손바닥이 비어 있었다. 노란 매트가 물처럼 꺼지고 있었다.\n며칠 동안 수색이 이어졌다. 하지만 "바닥 아래로 사라졌다"는 말은 아무도 믿지 않았다.\n그래서 나는 폐점한 놀이방으로 돌아왔다. 같은 노란 매트 위에 섰다. 일부러.',
-    '처음 떨어진 곳은 놀이방이 아니었다. 누런 벽지, 젖은 카펫, 끝없는 형광등.\n그 애 목소리가 벽 너머에서 들린다. 가까이 가면 멀어지고, 멈추면 다시 부른다.\n벽마다 긁힌 글씨가 있다. 남의 글씨여야 하는데, 손이 먼저 알아본다.',
-    '노란 병을 찾았다. 라벨엔 "아몬드 워터". 마시면 머릿속 안개가 조금 걷힌다.\n안 마시면 하루가 뭉개진다. 어제 쓴 글도 낯설어진다.\n동생 얼굴도 자꾸 흐릿해진다. 그래서 적어 둔다.\n앞니 빠진 웃음. 노란 우비. 손바닥에 묻은 케이크 크림.\n이름을 쓰려는데 펜 끝이 멈춘다. 분명 알고 있는데, 종이 위로는 안 내려온다.',
-    '규칙을 적어 둔다. 다음에 올 나를 위해.\n종이는 다 다른데, 필체가 하나다. 오래전에 쓴 것도, 방금 쓴 것도.\n모두 내 글씨다.\n나는 여기 처음 온 게 아니다. 처음이라고 믿도록, 매번 깎여 나갔을 뿐이다.',
-    '균열을 찾았다. 보랏빛으로 곪은 벽의 상처. 드디어 집에—\n(여기서부터 글씨가 손톱자국처럼 찢어진다)\n문이 아니었다. 입이었다.\n열었다고 생각한 순간, 더 깊은 곳으로 삼켜졌다.',
+    '생일 노래가 끝나고 애들이 케이크로 몰려갔다. 나는 그 애 손을 잡고 있었다.\n휴대폰을 봤다. 몇 초였다. 고개를 드니 손이 비어 있었다.\n노란 매트 가운데가 꺼져 있었다. 소리도 없었다.\n경찰은 2주를 뒤졌다. 바닥 밑으로 사라졌다는 내 말은 조서에도 안 올라갔다.\n그래서 혼자 왔다. 문 닫은 놀이방, 같은 매트 위에. 일부러 섰다.',
+    '떨어진 곳은 놀이방이 아니었다. 누런 벽지에 젖은 카펫, 형광등이 끝도 없다.\n벽 너머에서 그 애 목소리가 난다. 다가가면 멀어진다. 멈추면 또 부른다.\n벽에 긁어 쓴 글씨가 있다. 내 필체랑 너무 닮아서 한참 봤다.',
+    '노란 병을 주웠다. 라벨에 아몬드 워터라고 적혀 있다. 마시면 머리가 좀 돌아온다.\n안 마시면 하루가 뭉개진다. 어제 쓴 글이 남의 글 같다.\n동생 얼굴도 흐려진다. 잊기 전에 적는다.\n앞니 빠진 웃음. 노란 우비. 케이크 크림 묻은 손.\n이름을 쓰려는데 안 나온다. 아는데. 분명 아는데 안 나온다.',
+    '규칙을 적는다. 다음에 올 나한테 남긴다.\n주운 종이를 늘어놓고 알았다. 종이는 제각각인데 필체가 전부 하나다.\n내 글씨다. 전부.\n처음 온 게 아니었다. 올 때마다 처음인 줄 알았을 뿐이지.',
+    '균열을 찾았다. 벽이 보랏빛으로 곪은 자리. 드디어 집에—\n(여기서부터는 글씨가 찢겨 있다)\n문이 아니다. 입이다.\n열었다고 생각했는데 삼켜졌다. 더 밑으로.',
     // LEVEL 2 (5~7) — 1차 반전(루프) 확정
-    '기계실. 아무것도 만들지 않는 기계가 계속 돈다.\n기계음 사이에 목소리가 낀다. 그 애 목소리로 내 이름을 부른다.\n대답할 뻔했다. 대답하면, 그게 내 목소리를 가져갈 것 같았다.',
-    '어둠 속에서 눈 없는 것이 네 발로 긴다. 소리로 사냥한다. 딸깍, 딸깍.\n달려서 도망칠 수 없다. 멈춰라. 숨도 멈춰라. 지나갈 때까지.\n그것에게 잡힌 시신을 봤다. 목에 사원증이 걸려 있었다.\n흙먼지를 닦자, 사진 속 얼굴이 나를 보고 있었다.',
-    '발전기가 멈춰 있다. 퓨즈를 꽂아 불을 되살려야 엘리베이터가 움직인다.\n어둠 속의 것들이 자꾸 눈에 밟힌다. 하나는 사원증을, 하나는 해진 작업복을 걸치고 있다.\n처음부터 저 모습은 아니었을지도 모른다.',
+    '기계실이다. 뭘 만드는지도 모를 기계가 밤낮없이 돈다.\n기계음 틈에 목소리가 낀다. 그 애 목소리로 내 이름을 부른다.\n하마터면 대답할 뻔했다. 대답하면 안 될 것 같았다. 이유는 모른다.',
+    '눈 없는 게 네 발로 긴다. 딸깍 소리를 낸다. 소리 나는 쪽으로 온다.\n달리면 죽는다. 멈추면 산다. 숨까지 참아라. 그러면 지나간다.\n걔한테 당한 시신을 하나 봤다. 후드가 낯익어서 먼지를 닦았다.\n닦지 말 걸 그랬다.',
+    '발전기가 죽어 있다. 퓨즈 세 개를 꽂아야 엘리베이터가 돈다.\n어둠 속에 서 있는 것들. 하나는 사원증을 걸었고 하나는 작업복 차림이다.\n원래는 사람이었을 거다. 야간조. 못 나간 사람들.',
     // LEVEL 3 (8~10) — 동생 실재 여부를 캠코더 직전까지 의심으로 남긴다
-    '엘리베이터는 위로 갔는데, 문이 열리자 낡은 놀이방 냄새가 났다.\n벽마다 크레용 그림. 아이들이 웃고 있다. 입이 얼굴보다 컸다.\n그림 구석엔 삐뚤삐뚤한 글씨. "선생님이 같이 놀자고 해요." 그리고, "형은 언제 와요?"',
-    '아이 셋이 울고 있다. 저마다 잃어버린 것을 부른다. 곰인형, 풍선, 작은 태엽.\n찾아 돌려주면 잠깐 얼굴이 또렷해지고, 빛이 빠져나간다.\n셋 중 하나가 노란 우비를 입고 있다.\n가까이 가면 목 안쪽이 막힌다. 이름을 부르려고 할수록, 이름만 빠져나간다.',
-    '노란 우비 아이가 나를 본다.\n나는 늦었다. 그건 안다. 하지만 무엇에 늦었는지, 아직 쓸 수 없다.\n그 애 손에 작은 태엽이 없다. 내가 찾아 줘야 한다.\n돌려주면 기억이 돌아올까. 아니면, 더는 모른 척할 수 없게 될까.\n다음의 나야. 그 앞에서 도망치지 마라. 하지만 너무 빨리 믿지도 마라.',
+    '엘리베이터는 분명 위로 갔다. 문이 열리니 놀이방 냄새가 났다.\n벽마다 크레용 그림이다. 웃는 애들. 입이 얼굴보다 크게 그려져 있다.\n구석에 삐뚤삐뚤 적혀 있다. "선생님이 같이 놀자고 해요" "형은 언제 와요"',
+    '애들 셋이 운다. 하나는 곰인형, 하나는 풍선, 하나는 태엽을 찾는다.\n찾아서 쥐여 주면 잠깐 얼굴이 또렷해졌다가, 빛으로 흩어진다.\n셋 중 하나가 노란 우비다.\n가까이 가면 목이 멘다. 이름이 나올 것 같은데 목에서 걸린다.',
+    '노란 우비가 나를 본다.\n늦었다는 건 안다. 뭐에 늦었는지는 아직 못 쓰겠다.\n그 애 손에 태엽이 없다. 그건 내가 찾아 줘야 한다.\n돌려주면 기억이 날 거다. 사실은 그게 무섭다.\n다음의 나야. 이번엔 그 앞에서 도망치지 마라.',
   ];
   // 기록을 다 읽고 덮은 뒤, 하단에 순차적으로 떠오르는 '현재의 나'의 생각
   const NOTE_AFTER = [
-    ['그날의 노란 매트. 손을 놓은 건 바닥이었을까, 나였을까.'],
-    ['나는 여기 처음 왔다. …처음 왔다고 믿고 싶다.'],
-    ['이름이 떠오르지 않는다. 목소리만 남고, 이름만 없다.'],
-    ['"다음에 올 나"라니. 나는 누구에게 적고 있었던 걸까.', '처음이 아니다. 그 사실만은 이제 부정할 수 없다.'],
-    ['집으로 가는 문은 아니었다. 그런데도 나는 매번 그걸 열었나 보다.', '기억은 사라지고, 찾겠다는 마음만 남는다.'],
-    ['기계 소리에 섞인 목소리. 대답하면, 내 것도 사라진다.'],
-    ['…내 얼굴이었다.', '이전의 내가 여기서 죽었다. 그런데 나는 아직 걷고 있다.'],
-    ['사원증, 작업복, 해진 신발. 저것들도 한때는 누군가였다.', '나도 저렇게 남게 될까.'],
-    ['"형은 언제 와요." 그 글씨 앞에서 발이 떨어지지 않는다.'],
-    ['노란 우비. 작은 손. 그런데 이름만 비어 있다.'],
-    ['도망치면 또 처음으로 돌아갈 것이다.', '이번엔 끝까지 봐야 한다. 내가 잃은 것이 무엇인지.'],
+    ['놓은 게 아니라 놓친 거다. …다를 게 있나.'],
+    ['나는 여기 처음 왔다. 처음 맞다. 글씨 닮은 사람은 많다.'],
+    ['목소리는 이렇게 생생한데 이름이 안 나온다.'],
+    ['"다음에 올 나". 이걸 쓸 때 무슨 심정이었을까.', '몇 번째인지는 세지 말자. 알아서 좋을 게 없다.'],
+    ['알면서도 매번 열었다는 거다. 이번의 나도 열 거고.', '기억은 지워지는데 찾아야 한다는 것만 남나 보다.'],
+    ['방금 또 불렀다. 대답 안 했다. 잘한 건지 모르겠다.'],
+    ['…내 얼굴이었다.', '전의 내가 여기서 죽었다. 그럼 지금 걷고 있는 나는 뭐지.'],
+    ['사원증에 작업복. 퇴근을 못 했을 뿐이다, 저 사람들도.', '나는 여기 온 지 며칠째지. 세어 보니, 모르겠다.'],
+    ['"형은 언제 와요". 한참 서서 읽고 또 읽었다.'],
+    ['노란 우비까지 봤는데도 이름이 안 나온다. 미치겠다.'],
+    ['도망치면 또 처음이다. 그건 이제 안다.', '이번엔 끝까지 간다. 뭐가 나오든.'],
   ];
   const FLAVOR = [
     [
@@ -78,11 +79,11 @@
       '어디선가 증기가 샌다.',
       '컨베이어 벨트는 아무것도 운반하지 않는다.',
       '기름 냄새 사이로 희미한 단내가 난다.',
-      '파이프가 사람 체온처럼 따뜻하다.',
+      '파이프가 미지근하다. 사람 체온이다.',
       '기계 소리에 목소리가 섞여 있다. 대답하지 마라.',
       '딸깍… 딸깍… 어둠 속에서 무언가가 더듬는다.',
       '어둠 속에 잿빛 형체가 굳어 있다. …아까보다 가까운가?',
-      '기름 냄새 사이로 — 크레용 냄새? …설마.',
+      '기름 냄새에 크레용 냄새가 섞였다. …설마.',
       '기계 소음에 아이 흥얼거림이 섞였다. …그쳤다.',
       '사물함마다 이름표. 닳아서 안 보이는데, 하나는 왠지 낯익다.',
     ],
@@ -122,30 +123,30 @@
     '크레용 그림 — 손잡은 큰 사람과 작은 노란 우비. 큰 사람 쪽만 까만 크레용으로 문질러 지워져 있다.\n구석에 작게 — "형이 손을 놨어."',
   ];
   // 정신력이 낮을 때 떠오르는 거짓 속삭임 (불신 유발)
-  const FAKE_MSGS =['뒤를 봐.', '동생 같은 건 없어. 넌 미쳤어.', '그 목소리, 네가 지어낸 거야.', '넌 외동이었어. 동생 같은 건, 처음부터.', '그 애 이름을 대 봐. …못 대잖아.', '거의 다 왔어… 거짓말.', '이번엔 다를 거야. 거짓말.', '방금 그 소리, 네 발소리 아니야.', '여긴 아까 그 방이야.'];
+  const FAKE_MSGS =['뒤를 봐.', '동생 같은 건 없어. 넌 미쳤어.', '그 목소리, 네가 지어낸 거야.', '넌 외동이었어. 동생 같은 건, 처음부터.', '그 애 이름을 대 봐. …못 대잖아.', '거의 다 왔어… 거짓말.', '이번엔 다를 거야. …라고 지난번에도 썼잖아.', '방금 그 소리, 네 발소리 아니야.', '여긴 아까 그 방이야.'];
   const BRO_MSGS = ['…동생 목소리. 진짜일까, 내 머릿속일까.', '"형… 여기야…" 쫓아가면 아무도 없다.', '"형, 왜 손을 놨어?" …나는 멈춰 선다.'];
   const PORTAL_KINDS = ['rift', 'elevator', 'door'];
   const MON_NAME = { smiler: '미소 짓는 것', crawler: '눈 없는 것', clown: '광대', child: '우는 아이', shade: '꺼진 것' };
   // 괴물별 정체/유래 — 각자 자기만의 이야기 (처음 마주칠 때 한 줄, 시신 메모로 상세)
   const MON_LORE = {
     smiler: { tag: '잡아먹진 않아. 표정을 가져갈 뿐.',
-      story: '사람들이 "노클립"이라 부르던 그것일 거다. 잡아먹지는 않는다 — 마지막 표정만 가져간다.\n그 하얀 미소는, 먼저 삼켜진 얼굴들을 겹쳐 쓴 것이다. 한 번 웃었다면, 너를 찾았다는 뜻이다.' },
+      story: '뭔지는 아무도 모른다. 잡아먹는 게 아니라 마지막 표정을 가져간다고 한다.\n저 하얀 미소는 제 것이 아니다. 가져간 얼굴들을 겹쳐 쓴 거다.\n저게 웃었다면 이미 너를 찾았다는 뜻이다.' },
     crawler: { tag: '소리를 내는 건 뭐든 못 견뎌 해.',
-      story: '경비원 레예스. 아직 사원증을 목에 건 채다 — 어둠을 너무 오래 기어 다녀 눈이 말라붙었다.\n이제 소리로만 더듬는다. 아직 숨 쉬는 것들을 — 살아 있다는 그 소리를 — 견디지 못한다.' },
+      story: '경비원 레예스라고 한다. 사원증을 아직 목에 걸고 있다.\n어둠 속을 하도 오래 기어 다녀서 눈이 말라붙었다. 대신 귀만 남았다.\n숨소리를 못 견딘다. 살아 있는 소리를.' },
     clown: { tag: '멈추지도, 방향을 틀지도 못해.',
-      story: '파티 광대 피트였던 모양이다. 12년간 맡은 아이를 한 번도 잃은 적이 없었다 — 그날, 전까지.\n잃은 아이들을 찾겠다며 같은 놀이를 멈추지 못한다. 똑바로 달릴 줄만 알고, 방향도 멈춤도 잊었다.' },
+      story: '파티 광대 피트. 12년 동안 맡은 애를 한 번도 잃은 적이 없었다고 한다.\n마지막 날 하나를 잃었다. 그 뒤로 같은 술래잡기를 멈추지 못한다.\n똑바로 달리는 것밖에 모른다. 도는 법도 서는 법도 잊었다.' },
     child: { tag: '혼자 남는 게 무서워 전부 부르는 거야.',
-      story: '오지 않을 누군가를 부르며 우는 아이다.\n그 비명은 우릴 해치려는 게 아니다. 혼자 남는 게 무서워, 닿는 모든 걸 곁으로 끌어당기는 것뿐이다.' },
+      story: '오지 않는 누군가를 부르면서 운다.\n비명에 악의는 없다. 혼자 남기 싫어서 아무나 붙잡고 부르는 거다.\n문제는 그 소리를 온 층이 듣는다는 거고.' },
     shade: { tag: '빛 속에선 굳어. 어둠이 그것의 다리야.',
-      story: '정비공 데일이었을 거다 — 미소 짓는 것을 피해 어둠에 너무 오래 숨었던.\n어둠이 살에 스며, 이제 빛이 닿으면 사진처럼 굳어 버린다.\n빛이 없는 곳에서만 걷는다 — 눈을 떼는 순간, 한 발 더 가까이.' },
+      story: '정비공 데일일 거다. 미소 짓는 걸 피해서 너무 오래 어둠에 숨어 있었다.\n어둠이 몸에 뱄다. 이제 빛을 쬐면 그대로 굳는다.\n그래서 안 보이는 데서만 걷는다. 눈을 떼면 그만큼 와 있다.' },
   };
   const RELIC_NAME = { teddy: '낡은 곰인형', balloon: '바람 빠진 풍선', gear: '오르골 태엽', music: '낡은 오르골' };
   // 영혼이 해방되며 속삭이는 단서 (want 순서: teddy, balloon, gear=동생)
   const SPIRIT_LINES = {
-    teddy: '"곰돌이… 고마워, 형아. 광대가 같이 놀자 했을 때, 이걸 두고 갔거든." 그제야 편히 눈을 감는다.',
-    balloon: '"풍선 놓쳐서 주우러 갔다가… 그 문으로 들어갔어. 못 나왔어." 아이가 처음으로 웃는다. "노란 우비 입은 애도 있어 — 자꾸 형 기다리는." 그러곤 빛으로 풀어진다.',
-    gear: '노란 우비 아이가 고개를 든다. "형, 진짜 왔네." 손끝에 닿자, 오래 막혀 있던 기억이 흔들린다.',
-    music: '숨어 있던 아이가 고개를 든다. "나는… 안 울었어. 아무도 안 올 줄 알아서." 오르골을 안고 빛으로 풀어진다.',
+    teddy: '"곰돌이다… 고마워 형아. 광대 아저씨가 놀자 그래서, 두고 갔었어." 품에 안고서야 눈을 감는다.',
+    balloon: '"풍선 잡으러 갔다가… 문이 닫혔어. 못 나왔어." 아이가 처음으로 웃는다. "노란 우비 애도 있어. 맨날 형 기다려." 그러고는 빛으로 풀어진다.',
+    gear: '노란 우비 아이가 고개를 든다. "형, 진짜 왔네." 손끝이 닿자, 목에 걸려 있던 것이 내려간다.',
+    music: '숨어 있던 아이가 고개를 든다. "나는 안 울었어. 울어도 아무도 안 오니까." 오르골을 안고 빛으로 풀어진다.',
   };
   // 비밀 경로 — 동생 영혼을 돌처럼 부술 때, 금이 갈 때마다 내뱉는 애원 (충격 연출)
   const BRO_PLEAD = [
@@ -164,7 +165,7 @@
     '얼굴 없는 시신이 후드 안에 웅크려 있다.',
     '손에 빈 아몬드 워터 병을 쥔 채 굳었다.',
     '당신과 똑같은 옷을 입고 있다. …우연이겠지.',
-    '목의 사원증 사진은 긁혀 있다. 그런데도 이상하게 낯익다.',
+    '목에 건 사원증 사진이 긁혀 있다. 그런데 낯이 익다.',
   ];
   const CORPSE_SCARE_INTRO = [
     '눈코입 없던 시신이 — 얼굴을 들었다!',
@@ -237,15 +238,15 @@
   // ---------------- 인트로 컷신 (왜 이곳에 왔는가) ----------------
   const INTRO_CARDS = [
     { type: 'news', tag: '시 사회면', date: '— 올해 실종 7건, 경찰 "단서 없음"',
-      head: '도심 한복판에서, 사람들이 사라진다',
-      body: '올해만 일곱 번째다. CCTV에 잡힌 마지막 모습 이후, 그들은 말 그대로 흔적 없이 사라졌다. 목격자도, 시신도 없다.<br>온라인에서는 이를 <b>노클립(noclip)</b>이라 부른다 — 현실의 벽을 잘못 디뎌 그 "뒤편"으로 떨어지는 것.' },
+      head: '도심 실종 잇따라… 올해만 7명',
+      body: '올해 들어 일곱 번째다. 마지막 모습이 CCTV에 찍힌 뒤 어디에서도 발견되지 않았다. 경찰 관계자는 "동선이 끊기는 지점이 설명되지 않는다"고 말했다.<br>온라인 커뮤니티에서는 이런 실종을 <b>노클립(noclip)</b>이라 부른다. 벽 뒤편으로, 세상 바깥으로 떨어졌다는 뜻이다.' },
     { type: 'mono',
-      text: '그날은 동생 생일이었다.<br>실내 놀이방엔 풍선 냄새와 크레용 냄새가 섞여 있었다.<br>당신은 그 애 손을 잡고 있었다. 잠깐 — 정말 잠깐 휴대폰을 보았을 뿐인데.<br><span class="small">다시 고개를 들었을 때, 잡고 있던 손이 비어 있었다.</span>' },
+      text: '그날은 동생 생일이었다.<br>놀이방에서 풍선 냄새, 크레용 냄새가 났다.<br>당신은 그 애 손을 잡고 있었다. 휴대폰을 봤다. 몇 초.<br><span class="small">고개를 들었을 때, 손안이 비어 있었다.</span>' },
     { type: 'news', tag: '가족 제보 · 미공개', date: '— 여덟 번째 실종자',
-      head: '아이는 놀이방 바닥 아래로 사라졌다',
-      body: '당신은 봤다. 노란 매트가 물처럼 꺼지고, 동생이 그 아래로 가라앉는 것을. 아무도 믿지 않았다.<br>몇 달 뒤, 당신의 휴대폰에 출처 없는 음성이 도착한다:<br>"…형, 여기 어두워. 누가 자꾸 같이 놀자고 해. <b>형, 왜 손을 놨어?</b>"' },
+      head: '"바닥이 꺼졌어요" — 지워진 목격담',
+      body: '당신은 봤다. 노란 매트가 꺼지고 동생이 그 밑으로 가라앉는 것을. 조서에는 "보호자 진술, 신빙성 낮음"이라고 적혔다.<br>몇 달 뒤, 발신자 없는 음성 메시지가 왔다.<br>"…형, 여기 어두워. 누가 자꾸 같이 놀자 그래. <b>형, 왜 손을 놨어?</b>"' },
     { type: 'mono',
-      text: '폐점한 놀이방은 그대로 남아 있었다.<br>당신은 그 애가 사라진 노란 매트 위에 섰다.<br><span class="small">이번엔 고개를 돌리지 않으려고. 이번엔 손을 놓지 않으려고.</span>' },
+      text: '문 닫은 놀이방은 그대로였다.<br>당신은 그 애가 사라진 노란 매트 위에 선다.<br><span class="small">휴대폰은 차에 두고 왔다.</span>' },
   ];
   let introIdx = 0;
   // 한국어 받침 판별 조사: josa('광대','이','가')='광대가', josa('것','이','가')='것이'
@@ -302,9 +303,43 @@
     keys.add(k);
   });
   addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+
+  // 모바일 멀티터치: 이동/달리기는 누르는 동안 유지하고, 행동 버튼은 첫 터치에 한 번 실행한다.
+  const touchPointers = new Map();
+  function releaseTouch(pointerId) {
+    const active = touchPointers.get(pointerId);
+    if (!active) return;
+    touchPointers.delete(pointerId);
+    const sameButtonHeld = Array.from(touchPointers.values()).some((v) => v.button === active.button);
+    const sameKeyHeld = Array.from(touchPointers.values()).some((v) => v.key === active.key);
+    if (!sameButtonHeld) active.button.classList.remove('pressed');
+    if (!sameKeyHeld) keys.delete(active.key);
+  }
+  function releaseAllTouches() {
+    for (const pointerId of Array.from(touchPointers.keys())) releaseTouch(pointerId);
+  }
+  document.querySelectorAll('[data-touch-key]').forEach((button) => {
+    button.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const key = button.dataset.touchKey;
+      if (!key || touchPointers.has(e.pointerId)) return;
+      touchPointers.set(e.pointerId, { key, button });
+      button.classList.add('pressed');
+      try { button.setPointerCapture(e.pointerId); } catch (err) { /* 일부 구형 모바일 브라우저 */ }
+      if (!keys.has(key)) handleKey(key);
+      keys.add(key);
+    });
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+      button.addEventListener(type, (e) => releaseTouch(e.pointerId));
+    }
+  });
+  document.getElementById('mobile-controls').addEventListener('contextmenu', (e) => e.preventDefault());
+  addEventListener('blur', releaseAllTouches);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAllTouches(); });
+
   // 인트로: 화면 클릭으로도 넘기기
   overlay.addEventListener('click', (e) => {
-    if (game.state === 'intro' && e.target.id !== 'btn-skip') advanceIntro();
+    if (game.state === 'intro' && !e.target.closest('button')) advanceIntro();
   });
 
   function handleKey(k) {
@@ -354,9 +389,13 @@
         <div class="t-pre">NOCLIP // SURVIVAL HORROR</div>
         <h1 class="t-main">the rooms</h1>
         <button id="btn-start">${shattered ? '다시, 그 안으로' : '동생을 찾으러 간다'}</button>
-        <div class="t-keys">이동 WASD/방향키 · 달리기 Shift · 상호작용/숨기 E<br>
-        돌 던지기 Q · 아몬드 워터: 마시기 H / 던지기 G(괴물 약화)<br>
-        문을 닫아 막고, 가구를 밀어 봉쇄하고, 돌로 주의를 돌려라 · 음소거 M · 일시정지 ESC</div>
+        <div class="t-keys">
+          <span class="desktop-keys">이동 WASD/방향키 · 달리기 Shift · 상호작용/숨기 E<br>
+          돌 던지기 Q · 아몬드 워터: 마시기 H / 던지기 G(괴물 약화)<br>
+          문을 닫아 막고, 가구를 밀어 봉쇄하고, 돌로 주의를 돌려라 · 음소거 M · 일시정지 ESC</span>
+          <span class="mobile-keys">왼쪽 방향 패드로 이동 · R을 함께 누르면 달리기 · E 행동/숨기<br>
+          Q 돌 던지기 · H 아몬드 워터 마시기 · G 던져서 괴물 약화</span>
+        </div>
         <div class="t-credit">Made with Claude Fable 5</div>
         ${secretLine}
       </div>`);
@@ -372,7 +411,7 @@
     }).join('');
     showOverlay(`
       <div class="box look-box">
-        <div class="t-pre">당신은, 누구였나</div>
+        <div class="t-pre">당신은 누구였나</div>
         <h1 class="end-title" style="color:#d8cc8a;margin-bottom:10px">모습을 고른다</h1>
         <canvas id="look-prev" width="120" height="132"></canvas>
         <div class="look-name" id="look-name"></div>
@@ -433,7 +472,7 @@
   }
   function renderIntroCard() {
     const c = INTRO_CARDS[introIdx];
-    const hint = `<div class="skip-hint" id="btn-skip">클릭 / SPACE — 넘기기 (ESC 건너뛰기)</div>`;
+    const hint = `<div class="skip-hint" id="btn-skip">${touchMode ? '화면 터치 — 넘기기' : '클릭 / SPACE — 넘기기 (ESC 건너뛰기)'}</div>`;
     if (c.type === 'news') {
       showOverlay(`<div class="news">
         <div class="news-tag"><span>${c.tag}</span><span>NOCLIP</span></div>
@@ -460,7 +499,7 @@
     game.readingNote = i;
     showOverlay(`
       <div class="note-box">
-        <div class="note-head">먼저 떨어진 자의 기록 — ${i + 1}</div>
+        <div class="note-head">누군가의 메모 — ${i + 1}</div>
         <div class="note-body">${NOTE_TEXTS[i]}</div>
         <button id="btn-note">기록을 덮는다 [E]</button>
       </div>`);
@@ -520,16 +559,22 @@
   }
 
   function showPause() {
+    const controls = touchMode
+      ? `왼쪽 방향 패드 이동 · <b style="color:#d8cc8a">R</b> 달리기 <span style="color:#6e6440">(소리 주의)</span><br>
+          <b style="color:#d8cc8a">E</b> 행동/숨기 · <b style="color:#d8cc8a">Q</b> 돌 던지기<br>
+          아몬드 워터 — <b style="color:#d8cc8a">H</b> 마시기 · <b style="color:#d8cc8a">G</b> 던지기 <span style="color:#6e6440">(둔화)</span><br>
+          상단 <b style="color:#d8cc8a">M</b> 음소거 · <b style="color:#d8cc8a">II</b> 일시정지`
+      : `이동 <b style="color:#d8cc8a">WASD</b> / 방향키 · 달리기 <b style="color:#d8cc8a">Shift</b> <span style="color:#6e6440">(소리 주의)</span><br>
+          상호작용 · 숨기 · 문 · 가구 <b style="color:#d8cc8a">E</b><br>
+          돌 던지기 <b style="color:#d8cc8a">Q</b> <span style="color:#6e6440">(소리로 유인)</span><br>
+          아몬드 워터 — 마시기 <b style="color:#d8cc8a">H</b> · 던지기 <b style="color:#d8cc8a">G</b> <span style="color:#6e6440">(둔화)</span><br>
+          음소거 <b style="color:#d8cc8a">M</b> · 일시정지 <b style="color:#d8cc8a">ESC</b>`;
     showOverlay(`
       <div class="box">
         <h1 class="end-title" style="color:#d8cc8a">일시정지</h1>
         <p class="end-story">${game.world.cfg.name} — ${game.world.cfg.sub}</p>
         <div class="end-stats" style="text-align:left;display:inline-block;margin-bottom:22px">
-          이동 <b style="color:#d8cc8a">WASD</b> / 방향키 · 달리기 <b style="color:#d8cc8a">Shift</b> <span style="color:#6e6440">(소리 주의)</span><br>
-          상호작용 · 숨기 · 문 · 가구 <b style="color:#d8cc8a">E</b><br>
-          돌 던지기 <b style="color:#d8cc8a">Q</b> <span style="color:#6e6440">(소리로 유인)</span><br>
-          아몬드 워터 — 마시기 <b style="color:#d8cc8a">H</b> · 던지기 <b style="color:#d8cc8a">G</b> <span style="color:#6e6440">(둔화)</span><br>
-          음소거 <b style="color:#d8cc8a">M</b> · 일시정지 <b style="color:#d8cc8a">ESC</b><br>
+          ${controls}<br>
           <span style="color:#8a7f4e">어둠 속의 것들은 보이지 않는다 — 소리로 위치를 읽어라.</span>
         </div>
         <br>
@@ -547,16 +592,16 @@
     let title, story;
     if (cause === 'madness') {
       title = '정신 붕괴';
-      story = '당신의 정신은 벽지 속으로 녹아내렸다.<br>이제 윙윙거리는 소리만 남았다.';
+      story = '어느 순간부터 형광등 소리가 목소리로 들렸다.<br>지금은 그 소리가 편하다.';
     } else {
       const nm = MON_NAME[game.deathMon] || '그것';
       title = josa(nm, '이', '가') + ' 당신을 붙잡았다';
       const lines = {
-        smiler: '하얀 미소가, 당신이 마지막으로 본 것이었다.',
+        smiler: '마지막으로 본 것은 하얀 미소였다.',
         crawler: '뛰지 말았어야 했다. 딸깍 소리가 비명으로 바뀌었다.',
         clown: '피할 수 있었다. 광대는 방향을 못 바꾸니까. 한 발 늦었다.',
-        child: '아이의 비명이 당신을 멈춰 세웠고, 모두가 달려왔다.',
-        shade: '빛이 깜빡인 그 찰나, 잿빛 손이 굳어 있던 게 아니었다.',
+        child: '비명에 다리가 굳었다. 그리고 전부 이쪽으로 달려왔다.',
+        shade: '불이 깜빡인 건 한순간이었다. 잿빛 손에게는 그거면 충분했다.',
       };
       story = lines[game.deathMon] || lines.smiler;
     }
@@ -585,21 +630,20 @@
     } catch (e) { /* localStorage 사용 불가 환경 */ }
     // 서브 루트 보너스: 숨은 네 번째 아이까지 보냈다면 작별 한 줄이 더해진다
     const fourth = (game.world && game.world.fourthFreed)
-      ? '<br><br>그리고 — 울지 않아 아무도 못 찾던 그 아이도, 오르골을 안고 함께 떠났다.'
+      ? '<br><br>울지 않아서 아무도 못 찾았던 아이도, 오르골을 안고 같이 떠났다.'
       : '';
     showOverlay(`
       <div class="box">
         <h1 class="end-title green">손을 놓다</h1>
-        <p class="end-story">마지막으로 동생의 손을 잡았다. 노란 우비가 천천히 빛으로 풀어졌다.<br>
-        "형, 이제 안 무서워." 그 애가 웃었다. 앞니가 빠진 그 웃음으로.<br>
-        당신은 그제야 손에 힘을 푼다. 붙잡고 있는 동안, 아무것도 지키지 못했다는 걸 아니까.<br>
-        그리고 — 처음으로 — 그 손을 놓아 주었다.<br><br>
-        문을 지나자 차가운 새벽 공기. 폐점한 놀이방 유리문 너머로 아침이 오고 있었다.<br>
-        동생은 없다. 오래전에 떠났으니까. 하지만 이번엔, 혼자 떠나게 두지 않았다.${fourth}</p>
+        <p class="end-story">마지막으로 동생 손을 잡았다. 노란 우비가 천천히 빛으로 풀어졌다.<br>
+        "형, 이제 안 무서워." 앞니 빠진 웃음이었다.<br>
+        당신은 손에서 힘을 뺐다. 이번에는 놓치는 게 아니라, 놓는 거였다.<br><br>
+        문을 지나니 새벽 공기가 차다. 폐점한 놀이방 유리문 밖이 밝아 온다.<br>
+        동생은 없다. 오래전부터 없었다. 다만 이번에는 배웅을 했다.${fourth}</p>
         <div class="end-stats">세 영혼을 해방하고 귀환 · 탈출 시간 ${fmtTime(game.playT)}${best ? ` · 최고 기록 ${fmtTime(best)}` : ''}<br>
         남은 정신력 ${Math.round(game.sanity)}% · 마신 아몬드 워터 ${game.drank}병</div>
         <p class="end-story" style="font-size:12px;color:#6e6440;margin-top:14px">
-        형광등이 깜빡일 때마다, 아직도 그 애 목소리가 들리는 것 같다.<br>하지만 이번엔 안다. 문을 다시 여는 건 그 애가 아니라, 당신이라는 것을.</p>
+        형광등이 깜빡이면 아직도 흠칫한다.<br>그래도 이제, 놀이방 쪽으로는 차를 돌리지 않는다.</p>
         <button id="btn-again">다시 떨어진다 [R]</button>
       </div>`);
     document.getElementById('btn-again').addEventListener('click', newGame);
@@ -617,16 +661,16 @@
     showOverlay(`
       <div class="box">
         <h1 class="end-title shatter">동생을 깨뜨리다</h1>
-        <p class="end-story">마지막 금이 가던 순간, 그 애가 너를 올려다봤다. 원망도 없이.<br>
-        "형, 괜찮아. …이제 안 잡으러 와도 돼." 그리고 잿빛으로 부서졌다.<br><br>
-        노란 우비 한 조각을 주머니에 넣는다. 손이 떨리지 않는다 — 그게 더 무섭다.<br>
-        붙잡을 것이 사라지자, 이곳은 더 너를 가둘 이유가 없다. 벽이 스르륵 비켜선다.</p>
-        <p class="end-story" style="color:#c84a3a">너는 걸어 나간다. 다신 이 길을 헤매지 않을 것이다.<br>
-        동생을 잃어서가 아니라, 동생을 끝낸 자가 되었으니까.</p>
+        <p class="end-story">마지막 금이 갈 때 그 애가 올려다봤다. 원망하는 눈이 아니었다.<br>
+        "형, 괜찮아. 이제 안 와도 돼." 그리고 잿빛으로 부서졌다.<br><br>
+        노란 우비 조각 하나를 주머니에 넣었다. 손은 떨리지 않았다.<br>
+        붙잡을 게 없어진 사람을 여기 가둬 둘 수는 없다. 벽이 비켜선다.</p>
+        <p class="end-story" style="color:#c84a3a">너는 걸어 나간다. 다시는 여기 떨어지지 않을 거다.<br>
+        잃은 사람은 찾으러 돌아오지만, 끝낸 사람은 돌아올 이유가 없으니까.</p>
         <div class="end-stats">∎ 비밀 엔딩 · 손수 끝낸 시간 ${fmtTime(game.playT)} · 남은 정신력 ${Math.round(game.sanity)}%<br>
-        루프는 끝났다. 용서는 어디에도 없다.</div>
+        루프 종료. 용서는 없음.</div>
         <p class="end-story" style="font-size:12px;color:#6e6440;margin-top:14px">
-        …집에 돌아온 첫 밤, 거울 속의 네가 빠진 앞니로 웃는다. 네 얼굴인데, 네 웃음이 아니다.</p>
+        집에 돌아온 첫 밤, 거울 속에서 네가 웃고 있었다. 앞니 빠진 웃음이었다.</p>
         <button id="btn-again">다시 떨어진다 [R]</button>
       </div>`);
     document.getElementById('btn-again').addEventListener('click', newGame);
@@ -653,14 +697,14 @@
     showOverlay(`
       <div class="box">
         <h1 class="end-title" style="color:#9ab0c8;text-shadow:0 0 16px rgba(154,176,200,0.5)">같이 남다</h1>
-        <p class="end-story">어딘가에서 문이 열렸다 다시 닫히는 소리. 너는 가지 않는다. 갈 수가 없다.<br>
-        "형… 안 가?" ${BRO_NAME}가 묻는다. 너는 고개를 젓는다. 이번엔, 손을 놓지 않는다.<br><br>
-        그 애의 빛이 천천히 사위어 가고, 네 손끝도 잿빛으로 식는다.<br>
-        복도 끝, 벽이 스르륵 닫힌다. 어둠이 살에 스민다 — 따뜻하게.</p>
-        <p class="end-story" style="color:#9ab0c8">언젠가 누군가 이곳으로 떨어져, 형광등 아래에서 —<br>
-        네가 입었던 옷을 걸친 잿빛 형체를 발견할 것이다. 그 곁엔, 작은 그림자 하나.</p>
+        <p class="end-story">어디선가 문이 열렸다 닫히는 소리가 났다. 너는 안 갔다.<br>
+        "형… 안 가?" ${BRO_NAME}가 물었다. 고개를 저었다. 그거면 됐다.<br><br>
+        그 애의 빛이 천천히 잦아들고, 네 손끝부터 잿빛으로 식는다.<br>
+        복도 끝에서 벽이 닫힌다. 이상하게 춥지가 않다.</p>
+        <p class="end-story" style="color:#9ab0c8">언젠가 또 누가 여기로 떨어질 거다.<br>
+        형광등 아래서 네 옷을 입은 잿빛 형체를 볼 거다. 그 옆에 작은 것 하나와, 나란히.</p>
         <div class="end-stats">∎ 엔딩 · 끝내 놓지 못한 시간 ${fmtTime(game.playT)}<br>
-        루프는 끝났다. 떠나지 않는 쪽을 골랐으니까.</div>
+        루프 종료. 남는 쪽을 골랐다.</div>
         <button id="btn-again">다시 떨어진다 [R]</button>
       </div>`);
     document.getElementById('btn-again').addEventListener('click', newGame);
@@ -828,7 +872,7 @@
     BK.fx.addShake(4);
     if (BK.audio.started) BK.audio.thud();
     toast('…노란 매트 아래로 떨어졌다. 그 애가 사라진 그 안쪽.');
-    setTimeout(() => { if (game.state === 'play' && game.zoneIdx === 0) toast('벽도, 형광등도, 카펫도 다 똑같다. …먼저 다녀간 누군가의 흔적이라도 있을까.'); }, 3500);
+    setTimeout(() => { if (game.state === 'play' && game.zoneIdx === 0) toast('어느 쪽을 봐도 똑같은 방이다. 먼저 지나간 사람 흔적부터 찾자.'); }, 3500);
   }
 
   // 같은 층에서 부활 — 수집한 것은 유지, 정신력 패널티
@@ -847,6 +891,9 @@
     BK.audio.zone(game.zoneIdx);
     BK.fx.flash('rgba(255,255,255,0.8)', 0.9);
     toast('…눈을 뜨자, 여전히 여기다.');
+    if (game.world.brotherRevealPending && !game.world.brotherRevealSeen) {
+      scheduleBrotherReveal(350);
+    }
   }
 
   // ---------------- 구역 전환 연출 ----------------
@@ -870,7 +917,7 @@
       BK.audio.riftTrap();
       BK.fx.addShake(7);
       runCards([
-        { html: `<div class="box"><h1 class="end-title red">그것은 출구가 아니었다</h1><p class="end-story">균열은 문이 아니라, 입이었다.<br>바닥이 사라지고 — 당신은 더 깊이 떨어진다.</p></div>`, ms: 3200 },
+        { html: `<div class="box"><h1 class="end-title red">그것은 출구가 아니었다</h1><p class="end-story">균열은 문이 아니라 입이었다.<br>바닥이 사라지고, 당신은 더 깊이 떨어진다.</p></div>`, ms: 3200 },
         { html: zoneCardHTML(BK.ZONES[1]), ms: 2400 },
       ], () => {
         enterZone(1);
@@ -878,8 +925,8 @@
         game.state = 'play';
         BK.fx.flash('rgba(180,40,30,0.5)', 0.8);
         toast('공기가 무겁다. 기름과 녹 냄새.');
-        setTimeout(() => { if (game.state === 'play') toast('칠흑이다. 발전기가 죽어 있다. …불을 되찾지 못하면 이 어둠을 못 벗어날 것 같다.'); }, 3500);
-        setTimeout(() => { if (game.state === 'play') toast('어둠 속에 잿빛 형체가 서 있었다. 손전등을 비추자 — 굳는다. 눈을 떼면 안 되겠다.'); }, 6500);
+        setTimeout(() => { if (game.state === 'play') toast('칠흑이다. 발전기가 죽었다. 불을 못 살리면 여기서 못 나간다.'); }, 3500);
+        setTimeout(() => { if (game.state === 'play') toast('어둠 속에 잿빛 형체가 서 있다. 빛을 비추면 굳는다. 눈을 떼면 안 된다.'); }, 6500);
       });
     } else if (kind === 'elevator') {
       BK.audio.elevatorRide();
@@ -890,21 +937,21 @@
         enterZone(2);
         game.state = 'play';
         BK.fx.flash('rgba(255,235,225,0.6)', 0.7);
-        toast('…여기는, 그 놀이방인가?');
-        setTimeout(() => { if (game.state === 'play') toast('벽 너머에서 아이들이 흐느낀다. 잃어버린 걸 찾아 달라고… 그러는 것 같다.'); }, 3500);
+        toast('…여긴 그 놀이방이다. 그런데 그 놀이방이 아니다.');
+        setTimeout(() => { if (game.state === 'play') toast('벽 너머에서 애들이 흐느낀다. 뭘 찾아 달라는 것 같다.'); }, 3500);
       });
     } else if (kind === 'hatch') {
       // 서브 루트: 비상 해치 — 발전기 없이 어둠을 가로질러 기어 나가는 길. 험한 만큼 대가가 크다.
       BK.audio.elevatorRide();
       runCards([
-        { html: `<div class="box"><p class="end-story" style="font-size:17px">좁은 환풍구로 기어든다. 정식 출구가 아니다.<br>금속이 손바닥을 베고, 어둠이 더 깊어진다.</p></div>`, ms: 3400 },
+        { html: `<div class="box"><p class="end-story" style="font-size:17px">좁은 환풍구를 기어간다. 출구라고 부를 만한 게 아니다.<br>철판 모서리에 손바닥이 베인다.</p></div>`, ms: 3400 },
         { html: zoneCardHTML(BK.ZONES[2]), ms: 2400 },
       ], () => {
         enterZone(2);
         game.sanity = Math.max(22, game.sanity - 14); // 험한 길의 대가(어둠 횡단 자체가 이미 큰 비용 — 도착이 즉사로 이어지지 않게 완화)
         game.state = 'play';
         BK.fx.flash('rgba(40,40,55,0.6)', 0.7);
-        toast('…기어 나온 곳도 놀이방이다. 더 어둡고, 더 조용한.');
+        toast('기어 나와 보니 여기도 놀이방이다. 더 어둡고 조용할 뿐.');
       });
     } else if (kind === 'door') {
       winGame();
@@ -933,7 +980,7 @@
     w.exitLocKnown = true;
     BK.audio.buzz();
     BK.fx.flash('rgba(164,78,224,0.22)', 0.5);
-    toast(msg || '저 끝에서 보랏빛이 지직거린다. …균열이, 저기 있다.');
+    toast(msg || '저 끝에서 보랏빛이 지직거린다. 저거다.');
   }
   // 서브 루트(L2): 비상 해치의 존재/위치를 알게 된다
   function knowHatch(msg) {
@@ -961,7 +1008,7 @@
     w.exitWakeKnown = true; w.exitPryKnown = true;
     if (!w.exitMethodSure) {
       w.exitMethodSure = true;
-      toast('이제 전부 알겠다 — 돌을 던져 상처를 깨우고, 꿈틀하는 그 찰나에 손을 넣어 벌린다. 망설이면 다물린다.');
+      toast('이제 알겠다. 돌로 쳐서 깨우고, 꿈틀할 때 손을 넣어 벌린다. 망설이면 다물린다.');
     }
   }
   // 깨어난 균열을 벌려 활성 포털로 (이후 닿으면 함정처럼 더 깊이 떨어진다)
@@ -973,16 +1020,28 @@
     BK.audio.buzz(); BK.fx.addShake(3); BK.fx.flash('rgba(164,78,224,0.3)', 0.6);
     toast('상처가 입을 벌린다. 보랏빛이 새어 나온다.');
   }
+  // 돌은 착지점뿐 아니라 비행 경로에서도 균열을 맞힐 수 있어야 한다.
+  function tryWakeRiftAt(x, y) {
+    const w = game.world;
+    if (game.zoneIdx !== 0 || !w.exit || w.exit.opened || w.exit.awakeT > 0 ||
+        Math.hypot(w.exit.x - x, w.exit.y - y) >= 22) return false;
+    w.exit.awakeT = 5;
+    BK.audio.buzz(); BK.fx.addShake(2); BK.fx.flash('rgba(164,78,224,0.28)', 0.5);
+    if (w.exitPryKnown || w.exitMethodSure) toast('돌에 맞은 상처가 꿈틀, 벌어지려 한다. 지금이다 — 손을 넣어 벌려라(E)!');
+    else if (w.exitWakeKnown) toast('상처가 반응한다. 꿈틀거린다. 지금 뭔가 해야 한다(E).');
+    else { knowExitLocation('던진 돌이 벽의 상처에 맞자 — 지직, 꿈틀. 이게… 깨우는 건가.'); learnExitMethod('wake'); }
+    return true;
+  }
   // 깨우지 않고 맨몸으로 손대면 — 그것이 문다 (서브 루트: 그 대가로 '깨우기'를 깨닫는다)
   function biteRift() {
     const w = game.world;
     BK.audio.stingShort(); BK.fx.addShake(3); BK.fx.flash('rgba(160,30,40,0.32)', 0.5);
     game.sanity = Math.max(1, game.sanity - 8);
     w.exitBit = true;
-    toast('상처에 손을 넣자 — 그것이 문다! 손을 뺀다. 피가 맺힌다.');
+    toast('상처에 손을 넣자마자 물렸다. 손등에 피가 맺힌다.');
     if (!w.exitWakeKnown) {
       learnExitMethod('wake');
-      setTimeout(() => { if (game.state === 'play') toast('…억지로는 안 된다. 먼저 뭔가로 쳐서 깨운 다음에 벌려야 하는 건가.'); }, 1400);
+      setTimeout(() => { if (game.state === 'play') toast('억지로는 안 열린다. 먼저 깨워야 하나. 뭔가로 쳐서.'); }, 1400);
     }
   }
 
@@ -1011,7 +1070,7 @@
       BK.audio.stingShort();
       BK.fx.flash('rgba(255,40,30,0.3)', 0.7);
       BK.fx.addShake(4);
-      toast('마지막 아이가 빛이 되어 흩어진다. 어딘가에서, 문이 열리는 소리.');
+      toast('마지막 아이가 빛으로 흩어진다. 어디선가 문이 열리는 소리.');
       setTimeout(() => { if (game.state === 'play') toast('등 뒤에서 광대의 웃음이 찢어진다. 돌아보지 마. 달려.'); }, 1800);
     }
   }
@@ -1059,7 +1118,10 @@
     // 처음으로 추격당하면 생존 동사를 한 번 일러 준다 (조작 재안내)
     if (!game.combatHintShown) {
       game.combatHintShown = true;
-      setTimeout(() => { if (game.state === 'play') toast('[조작] Q 돌 던져 유인 · E 사물함에 숨기 · Shift 달리기'); }, 2300);
+      const hint = touchMode
+        ? '[조작] Q 돌로 유인 · E 행동으로 숨기 · R을 누른 채 이동해 달리기'
+        : '[조작] Q 돌 던져 유인 · E 사물함에 숨기 · Shift 달리기';
+      setTimeout(() => { if (game.state === 'play') toast(hint); }, 2300);
     }
     // L0: 그것이 나타난 끝에서 균열이 보인다 — 괴물이 출구 위치 + '깨우기' 힌트를 흘린다
     if (game.zoneIdx === 0) {
@@ -1162,10 +1224,10 @@
         game.sanity = Math.max(1, game.sanity - 3);
       } else if (w0.exitKnocks === 5) {
         BK.audio.duck(0.1, 0.3, 0.8); BK.audio.thud(); BK.fx.addShake(3);
-        toast('상처 너머에서 — 똑. 똑. 무언가가 마주 두드렸다.');
+        toast('상처 너머에서 똑, 똑, 마주 두드리는 소리가 났다.');
         game.sanity = Math.max(1, game.sanity - 4);
       } else {
-        toast('벽의 상처에서 찬 바람이 샌다. …어떻게 여는지 모르겠다. 단서가 더 필요하다.');
+        toast('벽의 상처에서 찬 바람이 샌다. 여는 법을 모르겠다.');
       }
       return;
     }
@@ -1233,7 +1295,7 @@
     BK.audio.generatorStart();
     BK.fx.flash('rgba(230,242,255,0.6)', 0.9);
     BK.fx.addShake(3.5);
-    toast('발전기가 깨어난다 — 불이 일제히 쏟아진다.');
+    toast('발전기가 깨어난다. 불이 일제히 들어온다.');
     // 빛이 한꺼번에 쏟아지자 어둠에 있던 '꺼진 것'이 그 자리에 영영 굳는다 (석화를 메인 클라이맥스로 승격)
     let caught = 0;
     for (const m of game.monsters) {
@@ -1243,14 +1305,25 @@
     }
     if (caught) {
       BK.audio.shadeFreeze(0);
-      setTimeout(() => { if (game.state === 'play') toast('쏟아진 빛 속에서 잿빛 것이 굳어 버린다 — 그 자리에, 영영. …데일이었을지도.'); }, 800);
+      setTimeout(() => { if (game.state === 'play') toast('쏟아진 빛 속에서 잿빛 것이 그대로 굳었다. 영영. …데일이었나.'); }, 800);
     }
     // 죽어 있던 기계가 깨어나, 컨베이어가 무언가를 나르기 시작한다 (안도 끝의 새 불안)
-    setTimeout(() => { if (game.state === 'play') toast('멈춰 있던 컨베이어가 덜컹, 다시 돈다 — 천에 싸인 무언가를 싣고.'); }, 2400);
+    setTimeout(() => { if (game.state === 'play') toast('멈췄던 컨베이어가 덜컹 다시 돈다. 천에 싸인 뭔가를 싣고.'); }, 2400);
     checkQuest(); // 엘리베이터 포털 개방
   }
 
   // 아이 영혼 해방
+  function scheduleBrotherReveal(delay) {
+    const w = game.world;
+    if (!w || !w.brotherRevealPending || w.brotherRevealSeen) return;
+    const tm = setTimeout(() => {
+      if (game.world === w && w.brotherRevealPending && !w.brotherRevealSeen && game.state === 'play') {
+        showCamcorderReveal();
+      }
+    }, delay);
+    game.fxTimers.push(tm);
+  }
+
   function freeSpirit(s) {
     s.freed = true;
     game.carrying = null;
@@ -1263,12 +1336,13 @@
       // 숨은 네 번째 아이 — 메인과 무관한 보너스. 엔딩에 작별 한 줄이 더해진다.
       game.world.fourthFreed = true;
       game.sanity = Math.min(100, game.sanity + 8);
-      setTimeout(() => { if (game.state === 'play') toast('울지 않아 아무도 못 찾던 아이를, 네가 찾았다.'); }, 1500);
+      setTimeout(() => { if (game.state === 'play') toast('울지 않아서 아무도 못 찾던 아이다. 네가 찾았다.'); }, 1500);
       return;
     }
     if (s.isBrother) {
       // 2차 반전 — 캠코더 증거
-      setTimeout(() => { if (game.state === 'play') showCamcorderReveal(); }, 1400);
+      game.world.brotherRevealPending = true;
+      scheduleBrotherReveal(1400);
     } else {
       checkQuest();
     }
@@ -1277,10 +1351,14 @@
   // 결정적 증거: 캠코더 — 동생을 잃은 그날의 영상 (2차 반전)
   function showCamcorderReveal() {
     if (game.state !== 'play') return;
+    const w = game.world;
+    if (w.brotherRevealSeen) { checkQuest(); return; }
+    w.brotherRevealPending = false;
+    w.brotherRevealSeen = true;
     BK.audio.sting();
     runCards([
-      { html: `<div class="box"><div class="t-pre">발견 · 낡은 캠코더</div><p class="end-story" style="font-size:16px">화면이 지직거리며 켜진다.<br>실내 놀이방. 풍선. 생일 모자. 등 뒤 현수막엔 — <b style="color:#e8d49a">생일 축하해, ${BRO_NAME}</b>.<br>노란 우비를 입은 아이가 매트 위에서 손을 흔든다. 그 옆에, 휴대폰을 내려다보는 당신.<br><br>노란 매트가 물처럼 꺼진다. 아이가 가라앉는다. 당신은 1초 늦게 고개를 든다.<br><span style="color:#c84a3a">"형, 왜 손을 놨어?"</span></p></div>`, ms: 5600 },
-      { html: `<div class="box"><p class="end-story" style="font-size:17px">…${BRO_NAME}. 그 애 이름은 ${BRO_NAME}였다.<br>이름이 돌아오자, 그날의 냄새까지 한꺼번에 돌아온다. 크레용, 케이크, 젖은 매트.<br>동생은 환영도, 이곳이 빚은 미끼도 아니었다.<br>정말 여기로 떨어졌고 — 당신이 다시 잡으려던 손은, 이미 식어 있었다.<br><br>구하러 온 것이 아니었다. 늦었다는 걸 알면서도 계속 들어왔다.<br>이번엔 <b>놓아주러</b>. 마지막 손을 놓으러.</p></div>`, ms: 5600 },
+      { html: `<div class="box"><div class="t-pre">발견 · 낡은 캠코더</div><p class="end-story" style="font-size:16px">화면이 지직거리다 켜진다.<br>놀이방. 풍선. 생일 모자. 현수막에는 <b style="color:#e8d49a">생일 축하해, ${BRO_NAME}</b>.<br>노란 우비 아이가 매트에서 손을 흔들고, 그 옆에 휴대폰을 보는 당신이 있다.<br><br>매트가 꺼진다. 아이가 가라앉는다. 당신은 한 박자 늦게 고개를 든다.<br><span style="color:#c84a3a">"형, 왜 손을 놨어?"</span></p></div>`, ms: 5600 },
+      { html: `<div class="box"><p class="end-story" style="font-size:17px">${BRO_NAME}. 그 애 이름은 ${BRO_NAME}다.<br>이름이 돌아오니까 그날 냄새까지 같이 온다. 크레용, 케이크, 젖은 매트.<br>동생은 환영이 아니었다. 이곳이 만들어 낸 미끼도 아니었다.<br>진짜로 여기 떨어졌고, 당신이 내려왔을 때는 이미 늦어 있었다.<br><br>알면서도 계속 내려왔다. 구하러 온 게 아니라는 걸 인정하기 싫어서.<br>이번에는 <b>놓아주러</b> 간다.</p></div>`, ms: 5600 },
     ], () => {
       game.state = 'play';
       checkQuest(); // 동생이 마지막이었다면 문 개방
@@ -1293,6 +1371,27 @@
   // ===== 비밀 엔딩: 동생을 깨뜨리다 =====
   // 던진 돌이 동생 영혼에 맞을 때마다 금이 간다. 세 번이면 산산조각.
   // 매 타격: 모든 괴물 소집 + 정신력 폭락 + 동생의 애원 → 멈추기 어렵게(존나 어렵게).
+  function summonMonsterTo(m, x, y) {
+    if ((m.kind === 'clown' && m.state === 'down') || (m.kind === 'shade' && m.petrified)) return;
+    const tx = Math.floor(x / T), ty = Math.floor(y / T);
+    m.lostT = 0; m.huntT = 0;
+    m.lastSeen = { x: tx, y: ty }; m.path = []; m.repathT = 0;
+    if (m.kind === 'clown') {
+      const dx = x - m.x, dy = y - m.y;
+      const len = Math.hypot(dx, dy) || 1;
+      m.dirVec = { x: dx / len, y: dy / len };
+      m.state = 'windup'; m.timer = m.spec.chargeWindup;
+      BK.audio.clownHorn();
+      return;
+    }
+    m.state = 'hunt';
+    if (m.kind === 'child') {
+      const me = m.tile();
+      m.path = BK.findPath(game.world, me.x, me.y, tx, ty) || [];
+      m.repathT = 0.6;
+    }
+  }
+
   function hitBrother(s, pan) {
     if (s.shattered) return;
     s.cracks = (s.cracks || 0) + 1;
@@ -1303,16 +1402,14 @@
     game.spiritFx = { x: s.x, y: s.y, t: 0.6, shatter: true };
     game.sanity = Math.max(1, game.sanity - 16);
     // 비명처럼 — 모든 괴물이 이 자리로 몰려온다 (가만히 서서 던지면 위험)
-    const pt = { x: Math.floor(s.x / T), y: Math.floor(s.y / T) };
     for (const m of game.monsters) {
       if (!m.active) continue;
-      m.state = 'hunt'; m.lostT = 0; m.huntT = 0;
-      m.lastSeen = { x: pt.x, y: pt.y }; m.path = []; m.repathT = 0;
+      summonMonsterTo(m, s.x, s.y);
     }
     if (s.cracks >= 3) { shatterBrother(s); return; }
     toast(BRO_PLEAD[BK.clamp(s.cracks - 1, 0, BRO_PLEAD.length - 1)]);
     if (s.cracks === 1) {
-      setTimeout(() => { if (game.state === 'play') toast('…멈춰야 한다. 그런데 손이, 멈추질 않는다.'); }, 1500);
+      setTimeout(() => { if (game.state === 'play') toast('멈춰야 한다. 그런데 손이 안 멈춘다.'); }, 1500);
     }
   }
 
@@ -1343,11 +1440,9 @@
     game.sanity = Math.max(1, game.sanity - 26);
     game.lightsOutT = Math.max(game.lightsOutT, 1.5);
     toast('아이가 비명을 질렀다 — 몸이 굳는다! 모두가 이쪽으로 온다!');
-    const pt = { x: Math.floor(game.player.x / T), y: Math.floor(game.player.y / T) };
     for (const m of game.monsters) {
       if (m === mon || !m.active) continue;
-      m.state = 'hunt'; m.lostT = 0; m.huntT = 0;
-      m.lastSeen = { x: pt.x, y: pt.y }; m.path = []; m.repathT = 0;
+      summonMonsterTo(m, game.player.x, game.player.y);
     }
   }
 
@@ -1430,7 +1525,7 @@
     // L0 균열의 '깨어난 창' — 돌로 깨운 뒤 벌릴 수 있는 짧은 시간
     if (w.exit && w.exit.awakeT > 0) {
       w.exit.awakeT -= dt;
-      if (w.exit.awakeT <= 0 && w.exitLocKnown) toast('상처가 다시 다물렸다 — 다시 깨워야 한다.');
+      if (w.exit.awakeT <= 0 && w.exitLocKnown) toast('상처가 도로 다물렸다. 다시 깨워야 한다.');
     }
 
     p.update(dt, inputVec(), w);
@@ -1440,7 +1535,7 @@
       // 꺼진 것: 석화가 절반쯤 진행되면 한 번 일러 준다(계속 비추라고)
       if (m.kind === 'shade' && !m.petrified && !m._petrifyHint && m.petrifyT > 1.6) {
         m._petrifyHint = true;
-        toast('꺼진 것이 빛 속에서 더 깊이 굳는다 — 계속 비추면 영영 멈출 것 같다.');
+        toast('꺼진 것이 빛 속에서 더 깊이 굳는다. 계속 비추면 영영 멈출 것 같다.');
       }
       // 광대: 벽에 박을 때마다(소진 전) 진행을 알려 준다
       if (m.kind === 'clown' && m.state !== 'down' && (m.crashes || 0) > (m._crashSeen || 0)) {
@@ -1494,19 +1589,11 @@
           for (const m of game.monsters) {
             if (m.active && Math.hypot(m.x - pj.x, m.y - pj.y) < 72) { m.weakT = 3; hit++; }
           }
-          if (hit) toast('아몬드 워터가 깨졌다 — 그것이 움츠러든다.');
+          if (hit) toast('아몬드 워터가 깨졌다. 그것이 움츠러든다.');
         } else {
           game.lure = { x: pj.x, y: pj.y, t: 4.5, fresh: true };
           BK.audio.rockLand(pan);
-          // L0: 던진 돌이 균열에 맞으면 — 상처가 깨어난다(벌릴 수 있는 창). 우연이어도 정체를 깨닫는다.
-          if (game.zoneIdx === 0 && w.exit && !w.exit.opened &&
-              Math.hypot(w.exit.x - pj.x, w.exit.y - pj.y) < 22) {
-            w.exit.awakeT = 5;
-            BK.audio.buzz(); BK.fx.addShake(2); BK.fx.flash('rgba(164,78,224,0.28)', 0.5);
-            if (w.exitPryKnown || w.exitMethodSure) toast('돌이 상처를 때리자 — 꿈틀, 벌어지려 한다. 지금이다 — 손을 넣어 벌려라(E)!');
-            else if (w.exitWakeKnown) toast('상처가 반응했다 — 꿈틀거린다. 지금 뭔가 해야 할 것 같다(E).');
-            else { knowExitLocation('던진 돌이 벽의 상처에 맞자 — 지직, 꿈틀. 이게… 깨우는 건가.'); learnExitMethod('wake'); }
-          }
+          tryWakeRiftAt(pj.x, pj.y);
           // L2: 던진 돌이 '애원하는 변이 시신'에 맞으면 — 끝내 준다(자비). 굳기 전에.
           if (game.zoneIdx === 1) {
             for (const ch of chunksAroundPlayer(1)) {
@@ -1527,6 +1614,7 @@
       } else {
         pj.x = nx; pj.y = ny;
         pj.vx *= (1 - 0.6 * dt); pj.vy *= (1 - 0.6 * dt);
+        if (pj.type === 'rock') tryWakeRiftAt(pj.x, pj.y);
         // 비밀 경로: 던진 돌이 동생 영혼에 명중하면 금이 간다 (놀이방 전용)
         // 비밀 경로는 '금단의 속삭임'(거짓 자비)을 한 번 들은 뒤에만 무장된다.
         // → 괴물 유인용으로 던진 돌이 동생을 '실수로' 깨뜨리는 사고를 막는다.
@@ -1813,7 +1901,7 @@
             game.loreRead++;
             if (!game.beggedSeen) {
               game.beggedSeen = true;
-              setTimeout(() => { if (game.state === 'play') toast('…돌이라도 던져 끝내 줄 수 있을 것 같다. 아니면, 그냥 두고 갈 수도.'); }, 1600);
+              setTimeout(() => { if (game.state === 'play') toast('돌로 끝내 줄 수는 있다. 아니면 그냥 두고 가거나.'); }, 1600);
             }
           } else if (pr.turning) {
             // 변해가는 시신 — 절반은 사람, 절반은 잿빛 돌. 설명 대신 정황만 보여 준다.
@@ -1825,7 +1913,7 @@
             // 처음 한 번, 스스로 알아채는 조용한 순간 (단정 짓지 않고 여지를 남긴다)
             if (!game.turnRealized) {
               game.turnRealized = true;
-              setTimeout(() => { if (game.state === 'play') toast('…저것들이 걸친 것. 사원증, 작업복, 해진 신발. 전부 사람이 입던 것이다.'); }, 1700);
+              setTimeout(() => { if (game.state === 'play') toast('사원증, 작업복, 해진 신발. 전부 사람이 걸치던 것들이다.'); }, 1700);
             }
           } else if (pr.scare) {
             pr.faceShown = true; pr.twitchT = 0.5; // 제자리에서 움찔 + 눈코입이 솟는다
@@ -2709,19 +2797,40 @@
   function drawFaceFlash() {
     const W = canvas.width, H = canvas.height;
     const jx = (Math.random() - 0.5) * 30, jy = (Math.random() - 0.5) * 30;
-    dctx.fillStyle = 'rgba(2,1,4,0.88)';
+    dctx.fillStyle = 'rgba(2,1,4,0.9)';
     dctx.fillRect(0, 0, W, H);
+    // 핏빛 배광 번쩍
+    const rg = dctx.createRadialGradient(W / 2, H / 2, 30, W / 2, H / 2, H * 0.75);
+    rg.addColorStop(0, 'rgba(120,10,8,0.5)');
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    dctx.fillStyle = rg; dctx.fillRect(0, 0, W, H);
     const spr = BK.assets.mon[game.jumpMon][2];
     const s = (H * 0.9) / spr.height;
     dctx.save();
     dctx.imageSmoothingEnabled = false;
     dctx.translate(W / 2 + jx - spr.width * s / 2, H / 2 + jy - spr.height * s / 2);
     dctx.scale(s, s);
+    dctx.globalAlpha = 0.35;                        // 색수차 고스트
+    dctx.drawImage(spr, -1.5, 0);
+    dctx.drawImage(spr, 1.5, 0.7);
+    dctx.globalAlpha = 1;
     dctx.drawImage(spr, 0, 0);
     dctx.restore();
+    // 주사선
+    dctx.fillStyle = 'rgba(0,0,0,0.28)';
+    for (let y = ((Math.random() * 3) | 0); y < H; y += 4) dctx.fillRect(0, y, W, 1);
   }
 
   const easeOutBack = (x) => { const c = 2.2; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+
+  // 괴물별 점프스케어 색 테마 — 꺼진 것은 피 대신 차가운 빛과 돌가루를 쏟는다
+  const JS_THEME = {
+    smiler: { pulse: '150,14,9', flat: '100,0,0', blood: '#7a0608', bloodHi: '#a01010' },
+    crawler: { pulse: '120,10,10', flat: '90,0,4', blood: '#5c0406', bloodHi: '#8a0d0e' },
+    clown: { pulse: '150,14,9', flat: '100,0,0', blood: '#7a0608', bloodHi: '#a01010' },
+    // 꺼진 것: 피 대신 균열에서 터져 나온 빛이 튄다
+    shade: { pulse: '110,132,160', flat: '58,74,102', blood: '#cdd4bc', bloodHi: '#ffffff' },
+  };
 
   // 동적 고어 점프스케어: 돌진 → 목 꺾임 → 입 찢어짐 → 피 쏟기
   function drawJumpscare() {
@@ -2729,6 +2838,7 @@
     const W = canvas.width, H = canvas.height;
     const cx = W / 2, cy = H / 2;
     const g = dctx;
+    const th = JS_THEME[game.jumpMon] || JS_THEME.smiler;
 
     // 격렬한 흔들림 (후반 증가)
     const shakeAmp = 7 + t * 26;
@@ -2736,11 +2846,11 @@
 
     g.fillStyle = '#040106';
     g.fillRect(0, 0, W, H);
-    // 맥동하는 붉은 배광
+    // 맥동하는 배광
     const pulse = 0.35 + 0.3 * Math.abs(Math.sin(t * 34));
     const rg = g.createRadialGradient(cx + jx, cy + jy, 20, cx, cy, 560);
-    rg.addColorStop(0, `rgba(150,14,9,${pulse})`);
-    rg.addColorStop(0.6, 'rgba(50,4,4,0.3)');
+    rg.addColorStop(0, `rgba(${th.pulse},${pulse})`);
+    rg.addColorStop(0.6, `rgba(${th.flat},0.3)`);
     rg.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = rg;
     g.fillRect(0, 0, W, H);
@@ -2816,8 +2926,8 @@
     vg.addColorStop(1, 'rgba(0,0,0,0.95)');
     g.fillStyle = vg;
     g.fillRect(0, 0, W, H);
-    // 적색 맥동
-    g.fillStyle = `rgba(100,0,0,${0.08 + 0.1 * Math.abs(Math.sin(t * 46))})`;
+    // 색 맥동 (괴물 테마)
+    g.fillStyle = `rgba(${th.flat},${0.08 + 0.1 * Math.abs(Math.sin(t * 46))})`;
     g.fillRect(0, 0, W, H);
   }
 
@@ -2885,26 +2995,40 @@
     g.stroke();
     g.fillStyle = 'rgba(225,232,210,0.5)'; g.beginPath(); g.arc(x + jit(5), y + len, (w || 2.5) * 0.9, 0, Math.PI * 2); g.fill();
   }
-  // 개별 치아 (잇몸 + 누런 음영 + 균열)
-  function goreTeeth(g, x0, y0, x1, y1, count, h, down) {
+  // 개별 치아 (잇몸 + 누런 음영 + 균열) — pal로 돌 이빨 등 변주
+  function goreTeeth(g, x0, y0, x1, y1, count, h, down, pal) {
+    const P = pal || { gum: '#6e2e2e', a: '#efe6c8', b: '#d8c89e', c: '#b09a6a', crack: 'rgba(90,60,30,0.5)' };
     const dir = down ? 1 : -1;
     for (let i = 0; i < count; i++) {
       const tx = BK.lerp(x0, x1, i / (count - 1));
       const tw = ((x1 - x0) / count) * 0.82;
       const hh = h * (0.7 + Math.random() * 0.5);
       // 잇몸
-      g.fillStyle = '#6e2e2e'; g.fillRect(tx - tw / 2, y0, tw, 5 * dir);
+      g.fillStyle = P.gum; g.fillRect(tx - tw / 2, y0, tw, 5 * dir);
       // 치아
       const tg = g.createLinearGradient(tx, y0, tx, y0 + hh * dir);
-      tg.addColorStop(0, '#efe6c8'); tg.addColorStop(0.7, '#d8c89e'); tg.addColorStop(1, '#b09a6a');
+      tg.addColorStop(0, P.a); tg.addColorStop(0.7, P.b); tg.addColorStop(1, P.c);
       g.fillStyle = tg;
       g.beginPath();
       g.moveTo(tx - tw / 2, y0); g.lineTo(tx + tw / 2, y0);
       g.lineTo(tx + tw / 2 - 2, y0 + hh * dir); g.lineTo(tx - tw / 2 + 2, y0 + hh * dir);
       g.closePath(); g.fill();
       // 균열/음영
-      g.strokeStyle = 'rgba(90,60,30,0.5)'; g.lineWidth = 1;
+      g.strokeStyle = P.crack; g.lineWidth = 1;
       g.beginPath(); g.moveTo(tx, y0 + 2 * dir); g.lineTo(tx + jit(2), y0 + hh * dir * 0.8); g.stroke();
+    }
+  }
+  const STONE_TEETH = { gum: '#3a3a44', a: '#e8ecdc', b: '#c2c4b4', c: '#8e9084', crack: 'rgba(60,64,58,0.5)' };
+  // 벌어진 구멍 사이로 늘어나는 살/점액 가닥
+  function goreStrands(g, x0, y0, x1, y1, n, col) {
+    g.strokeStyle = col; g.lineCap = 'round';
+    for (let i = 0; i < n; i++) {
+      const sx = BK.lerp(x0, x1, n < 2 ? 0.5 : i / (n - 1)) + jit(5);
+      const sy = y0 + jit(3);
+      g.lineWidth = 1 + Math.random() * 1.6;
+      g.beginPath(); g.moveTo(sx, sy);
+      g.quadraticCurveTo(sx + jit(7), (sy + y1) / 2 + jit(6), sx + jit(9), y1 + jit(3));
+      g.stroke();
     }
   }
 
@@ -2912,148 +3036,349 @@
   function drawGoreFace(ctx, kind, gape, t) {
     const g = ctx;
     if (kind === 'crawler') {
-      // 눈 없는 것: 축축한 검은 살 + 4갈래로 쩍 벌어지는 입
-      goreSkin(g, 0, 0, 152, 176, '#1a141c', '#0d0810', '#040206');
+      // 눈 없는 것: 축축한 검은 살덩이 — 얼굴 전체가 세로로 찢어져 벌어진다. 눈자리엔 아문 흉터뿐
+      goreSkin(g, 0, 0, 152, 176, '#2c2229', '#161018', '#080409');
+      const wx = 16 + gape * 58;   // 찢어진 최대 반폭
+      const seam = (y) => wx * Math.pow(Math.max(0.001, Math.cos((y / 330) * Math.PI)), 0.65);
+      // 찢어지며 좌우로 당겨지는 근섬유 결
+      g.strokeStyle = 'rgba(74,46,50,0.55)';
+      for (let i = 0; i < 20; i++) {
+        const yy = -140 + (i / 19) * 280;
+        const s = seam(yy);
+        for (const dir of [-1, 1]) {
+          g.lineWidth = 1 + Math.random() * 1.6;
+          g.beginPath(); g.moveTo(dir * (s + 4), yy);
+          g.quadraticCurveTo(dir * (s + 60), yy + jit(10), dir * 148, yy * 1.05 + jit(14));
+          g.stroke();
+        }
+      }
       // 젖은 광택
-      g.fillStyle = 'rgba(120,130,140,0.10)';
-      g.beginPath(); g.ellipse(-40, -60, 50, 70, -0.4, 0, Math.PI * 2); g.fill();
-      // 등 융기/힘줄
-      g.strokeStyle = 'rgba(60,50,44,0.55)'; g.lineWidth = 3;
-      for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(i * 30, -150); g.quadraticCurveTo(i * 52, 0, i * 30, 150); g.stroke(); }
-      const op = 14 + gape * 80;
-      // 네 갈래 입
-      g.fillStyle = '#2a0608'; g.beginPath();
-      g.moveTo(0, -op * 1.4); g.lineTo(op, 0); g.lineTo(0, op * 1.4); g.lineTo(-op, 0); g.closePath(); g.fill();
-      // 목구멍 깊이 그라디언트
-      const tg = g.createRadialGradient(0, 0, 2, 0, 0, op * 0.8);
-      tg.addColorStop(0, '#000'); tg.addColorStop(0.6, '#1a0204'); tg.addColorStop(1, '#3a0a0c');
-      g.fillStyle = tg; g.beginPath(); g.ellipse(0, 0, op * 0.55, op * 0.78, 0, 0, Math.PI * 2); g.fill();
-      // 송곳니 (방사형, 음영)
-      for (let i = 0; i < 16; i++) {
-        const a = (i / 16) * Math.PI * 2, r = op * (i % 2 ? 1.32 : 1.02);
-        const tx = Math.cos(a) * r, ty = Math.sin(a) * r * 1.25;
-        const fg = g.createLinearGradient(tx, ty, 0, 0);
-        fg.addColorStop(0, '#e8dec8'); fg.addColorStop(1, '#9a8a66');
-        g.fillStyle = fg; g.beginPath();
-        g.moveTo(tx, ty); g.lineTo(tx * 0.55 + jit(3), ty * 0.55 + jit(3));
-        g.lineTo(Math.cos(a + 0.22) * r * 0.85, Math.sin(a + 0.22) * r * 1.05); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(150,160,175,0.09)';
+      g.beginPath(); g.ellipse(-78, -70, 42, 62, -0.45, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.ellipse(82, 30, 24, 40, 0.4, 0, Math.PI * 2); g.fill();
+      // 아문 눈자리 — 움푹 꺼진 구덩이 + 꿰맨 자국
+      for (const ex of [-76, 76]) {
+        const sg = g.createRadialGradient(ex, -70, 2, ex, -70, 28);
+        sg.addColorStop(0, 'rgba(0,0,0,0.78)'); sg.addColorStop(1, 'rgba(40,26,30,0)');
+        g.fillStyle = sg; g.beginPath(); g.ellipse(ex, -70, 26, 17, 0, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = 'rgba(140,120,110,0.5)'; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(ex - 20, -70); g.lineTo(ex + 20, -70); g.stroke();
+        for (let s = -2; s <= 2; s++) {
+          g.beginPath(); g.moveTo(ex + s * 9, -76); g.lineTo(ex + s * 9 + jit(2), -64); g.stroke();
+        }
       }
-      // 점액 가닥 다수
-      if (gape > 0.4) for (let i = 0; i < 5; i++) goreDrool(g, jit(op), op * (0.7 + Math.random() * 0.5), 40 + gape * 60 + Math.random() * 30, 2 + Math.random() * 2);
+      // 찢어진 구멍 — 지그재그 가장자리의 세로 아가리
+      g.lineJoin = 'round';
+      g.beginPath();
+      g.moveTo(0, -160);
+      for (let yy = -150; yy <= 150; yy += 20) g.lineTo(seam(yy) + jit(4), yy);
+      g.lineTo(0, 162);
+      for (let yy = 150; yy >= -150; yy -= 20) g.lineTo(-seam(yy) - jit(4), yy);
+      g.closePath();
+      const tg = g.createRadialGradient(0, 10, 4, 0, 10, 185);
+      tg.addColorStop(0, '#000'); tg.addColorStop(0.55, '#150104'); tg.addColorStop(1, '#3a070a');
+      g.fillStyle = tg; g.fill();
+      g.strokeStyle = '#6e2a2e'; g.lineWidth = 5; g.stroke();          // 생살 림
+      g.strokeStyle = 'rgba(220,160,150,0.25)'; g.lineWidth = 2; g.stroke(); // 젖은 안쪽 림
+      // 인후 깊숙한 옹이
+      g.fillStyle = '#2a0407'; g.beginPath(); g.ellipse(0, 60, wx * 0.2, wx * 0.3, 0, 0, Math.PI * 2); g.fill();
+      // 이빨 — 양쪽 가장자리에서 지퍼처럼 맞물린다 (가운데가 가장 크다)
+      for (const dir of [-1, 1]) {
+        for (let i = 0; i < 7; i++) {
+          const yy = -118 + i * 39 + (dir < 0 ? 0 : 19) + jit(4);
+          const s = seam(yy);
+          const len = (10 + gape * 30) * (1 - Math.abs(yy) / 230) + 6;
+          const th = 8 + 7 * (1 - Math.abs(yy) / 210);
+          const fg = g.createLinearGradient(dir * s, yy, dir * (s - len), yy);
+          fg.addColorStop(0, '#ece2ca'); fg.addColorStop(1, '#8e7e5c');
+          g.fillStyle = fg;
+          g.beginPath();
+          g.moveTo(dir * s, yy - th);
+          g.lineTo(dir * s, yy + th);
+          g.lineTo(dir * (s - len), yy + jit(3));
+          g.closePath(); g.fill();
+        }
+      }
+      // 가로로 늘어나는 힘줄/점액 가닥 + 침
+      if (gape > 0.2) {
+        g.strokeStyle = 'rgba(215,222,205,0.35)'; g.lineCap = 'round';
+        for (let i = 0; i < 5; i++) {
+          const yy = -90 + i * 45 + jit(8);
+          const s = seam(yy);
+          g.lineWidth = 1 + Math.random() * 1.8;
+          g.beginPath(); g.moveTo(-s * 0.9, yy);
+          g.quadraticCurveTo(jit(10), yy + 14 + jit(6), s * 0.9, yy + jit(6));
+          g.stroke();
+        }
+        for (let i = 0; i < 4; i++) goreDrool(g, jit(wx * 0.6), 120 + Math.random() * 30, 30 + gape * 50 + Math.random() * 24, 2 + Math.random() * 2.5);
+      }
     } else if (kind === 'clown') {
-      // 광대: 갈라진 분칠 피부 + 핏줄 + 찢어진 미소
-      goreSkin(g, 0, -6, 134, 152, '#f4efe6', '#d8cdba', '#9c8e76');
-      // 헝클어진 초록 머리
-      g.fillStyle = '#34502a';
-      for (let i = -6; i <= 6; i++) { g.beginPath(); g.moveTo(i * 20, -118); g.lineTo(i * 26 + jit(6), -188 - Math.random() * 34); g.lineTo(i * 20 + 16, -118); g.closePath(); g.fill(); }
-      // 피부 핏줄 + 갈라진 분장
-      goreVeins(g, 40, -70, 60, 'rgba(150,40,40,0.4)', 8);
-      goreVeins(g, -40, -70, 60, 'rgba(150,40,40,0.4)', 8);
-      g.strokeStyle = 'rgba(120,90,70,0.4)'; g.lineWidth = 1.5;
-      for (let i = 0; i < 6; i++) { g.beginPath(); g.moveTo(jit(120), -120 + Math.random() * 120); g.lineTo(jit(120), -120 + Math.random() * 120); g.stroke(); }
-      // 충혈된 X자 눈 + 피눈물
-      for (const ex of [-58, 58]) {
-        g.fillStyle = 'rgba(180,40,40,0.35)'; g.beginPath(); g.arc(ex, -30, 30, 0, Math.PI * 2); g.fill();
-        goreVeins(g, ex, -30, 26, 'rgba(170,30,30,0.7)', 7);
-        g.strokeStyle = '#160406'; g.lineWidth = 9; g.lineCap = 'round';
-        g.beginPath(); g.moveTo(ex - 22, -50); g.lineTo(ex + 22, -10); g.stroke();
-        g.beginPath(); g.moveTo(ex + 22, -50); g.lineTo(ex - 22, -10); g.stroke();
-        g.strokeStyle = '#8a0d0e'; g.lineWidth = 6;
-        g.beginPath(); g.moveTo(ex, -10); g.lineTo(ex + jit(4), -10 + (60 + 90 * gape)); g.stroke();
+      // 광대: 들뜬 분칠이 갈라지고 — 꿰맨 X자 눈이 뜯어지며, 그려진 미소가 진짜로 찢어진다
+      goreSkin(g, 0, -6, 136, 154, '#f2ede2', '#d3c8b4', '#94866e');
+      // 분장 균열 — 들뜬 페인트 조각 (들린 모서리 하이라이트)
+      for (let i = 0; i < 9; i++) {
+        let x = jit(100), y = -140 + Math.random() * 200;
+        g.strokeStyle = 'rgba(110,88,66,0.55)'; g.lineWidth = 1.6;
+        g.beginPath(); g.moveTo(x, y);
+        for (let s = 0; s < 3; s++) { const nx = x + jit(26), ny = y + 10 + Math.random() * 22; g.lineTo(nx, ny); x = nx; y = ny; }
+        g.stroke();
+        g.strokeStyle = 'rgba(255,252,240,0.5)'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(x - 6, y - 4); g.lineTo(x + 4, y + 2); g.stroke();
       }
-      // 빨간 코 (입체)
-      const ng = g.createRadialGradient(-6, 2, 2, 0, 8, 22);
-      ng.addColorStop(0, '#ff5a4a'); ng.addColorStop(1, '#a01010');
-      g.fillStyle = ng; g.beginPath(); g.arc(0, 8, 20, 0, Math.PI * 2); g.fill();
-      g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.arc(-7, 1, 5, 0, Math.PI * 2); g.fill();
-      // 찢어진 거대 미소
-      const mw = 52 + gape * 58, mh = 26 + gape * 72;
-      g.fillStyle = '#160204'; g.beginPath(); g.ellipse(0, 72, mw, mh, 0, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = '#8a0d0e'; g.lineWidth = 6;
-      g.beginPath(); g.moveTo(-mw, 72); g.lineTo(-mw - 32 * gape, 72 - 28 * gape); g.stroke();
-      g.beginPath(); g.moveTo(mw, 72); g.lineTo(mw + 32 * gape, 72 - 28 * gape); g.stroke();
-      goreTeeth(g, -mw + 6, 72 - mh + 4, mw - 6, 72 - mh + 4, 9, 18, true);
-      goreTeeth(g, -mw + 6, 72 + mh - 4, mw - 6, 72 + mh - 4, 9, 18, false);
-      if (gape > 0.5) { goreDrool(g, -mw * 0.4, 72 + mh - 6, 30 + gape * 40); goreDrool(g, mw * 0.4, 72 + mh - 6, 26 + gape * 36); }
+      // 관자놀이 핏줄
+      goreVeins(g, 46, -84, 56, 'rgba(150,40,40,0.4)', 7);
+      goreVeins(g, -46, -84, 56, 'rgba(150,40,40,0.4)', 7);
+      // 헝클어진 초록 머리 — 두 톤 가닥
+      for (let i = -6; i <= 6; i++) {
+        const bx = i * 19;
+        g.fillStyle = i % 2 ? '#31501f' : '#48702c';
+        g.beginPath(); g.moveTo(bx - 9, -116); g.lineTo(bx + jit(10), -190 - Math.random() * 36); g.lineTo(bx + 10, -114); g.closePath(); g.fill();
+      }
+      g.strokeStyle = 'rgba(24,40,14,0.6)'; g.lineWidth = 2;
+      for (let i = 0; i < 6; i++) { g.beginPath(); g.moveTo(jit(110), -120); g.lineTo(jit(120), -176 - Math.random() * 20); g.stroke(); }
+      // 꿰맨 X자 눈 — 왼쪽 실밥이 뜯어지며 충혈된 진짜 눈이 내다본다
+      for (const ex of [-58, 58]) {
+        g.fillStyle = 'rgba(150,30,30,0.28)'; g.beginPath(); g.arc(ex, -34, 32, 0, Math.PI * 2); g.fill();
+        goreVeins(g, ex, -34, 28, 'rgba(160,30,30,0.6)', 6);
+        const tear = ex < 0 ? BK.clamp((gape - 0.35) / 0.4, 0, 1) : 0;
+        if (tear > 0.1) {
+          // 뜯어진 실밥 틈 — 아몬드꼴로 벌어지고, 그 안에서 진짜 눈이 형형하게 내다본다
+          g.fillStyle = '#0c0406'; g.beginPath(); g.ellipse(ex, -34, 27, 9 + tear * 14, 0, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = 'rgba(240,232,214,0.5)'; g.lineWidth = 2;   // 벌어진 살 가장자리
+          g.beginPath(); g.ellipse(ex, -34, 27, 9 + tear * 14, 0, 0, Math.PI * 2); g.stroke();
+          g.save(); g.shadowColor = '#fff'; g.shadowBlur = 14;
+          const eb = g.createRadialGradient(ex - 4, -38, 2, ex, -34, 22);
+          eb.addColorStop(0, '#ffffff'); eb.addColorStop(0.7, '#f0e6ce'); eb.addColorStop(1, '#c0b090');
+          g.fillStyle = eb; g.beginPath(); g.ellipse(ex, -34, 21, 7 + tear * 12, 0, 0, Math.PI * 2); g.fill();
+          g.restore();
+          goreVeins(g, ex, -34, 14, 'rgba(190,30,30,0.75)', 4);
+          g.fillStyle = '#140804'; g.beginPath(); g.arc(ex + 2, -33, 5.5 + tear * 2.5, 0, Math.PI * 2); g.fill();
+          g.fillStyle = 'rgba(255,255,255,0.95)'; g.beginPath(); g.arc(ex - 1, -36, 2.2, 0, Math.PI * 2); g.fill();
+        }
+        // X 실밥 (뜯긴 쪽은 끊어져 늘어진다)
+        g.strokeStyle = '#150406'; g.lineWidth = 8; g.lineCap = 'round';
+        if (tear > 0.5) {
+          g.beginPath(); g.moveTo(ex - 24, -54); g.lineTo(ex - 6, -40); g.stroke();
+          g.beginPath(); g.moveTo(ex + 10, -22 + tear * 14); g.lineTo(ex + 24, -14 + tear * 10); g.stroke();
+        } else {
+          g.beginPath(); g.moveTo(ex - 24, -54); g.lineTo(ex + 24, -14); g.stroke();
+        }
+        g.beginPath(); g.moveTo(ex + 24, -54); g.lineTo(ex - 24, -14); g.stroke();
+        // 실땀
+        g.lineWidth = 3;
+        for (let s = -1; s <= 1; s++) {
+          g.beginPath(); g.moveTo(ex + s * 12 - 5, -34 + s * 10 - 6); g.lineTo(ex + s * 12 + 5, -34 + s * 10 + 4); g.stroke();
+        }
+        // 피눈물
+        g.strokeStyle = '#8a0d0e'; g.lineWidth = 6;
+        g.beginPath(); g.moveTo(ex, -14); g.lineTo(ex + jit(4), -14 + 58 + 92 * gape); g.stroke();
+      }
+      // 코 — 기름진 광택
+      const ng = g.createRadialGradient(-6, 2, 2, 0, 8, 23);
+      ng.addColorStop(0, '#ff604e'); ng.addColorStop(1, '#960e0e');
+      g.fillStyle = ng; g.beginPath(); g.arc(0, 8, 21, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.6)'; g.beginPath(); g.ellipse(-8, 0, 6, 4, -0.5, 0, Math.PI * 2); g.fill();
+      // 그려진 미소 밖으로 — 볼을 타고 올라가는 진짜 찢어진 상처
+      const mw = 54 + gape * 60, mh = 26 + gape * 74;
+      g.strokeStyle = '#7a0b0c'; g.lineWidth = 7; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-mw + 4, 70); g.quadraticCurveTo(-mw - 20 * gape, 62 - 20 * gape, -mw - 34 * gape, 44 - 26 * gape); g.stroke();
+      g.beginPath(); g.moveTo(mw - 4, 70); g.quadraticCurveTo(mw + 20 * gape, 62 - 20 * gape, mw + 34 * gape, 44 - 26 * gape); g.stroke();
+      // 입 구멍 + 혀 그림자
+      const mg = g.createRadialGradient(0, 72, 4, 0, 72, mh);
+      mg.addColorStop(0, '#000'); mg.addColorStop(0.7, '#1c0306'); mg.addColorStop(1, '#3c0a0c');
+      g.fillStyle = mg; g.beginPath(); g.ellipse(0, 72, mw, mh, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(120,24,28,0.7)'; g.beginPath(); g.ellipse(0, 72 + mh * 0.5, mw * 0.5, mh * 0.32, 0, 0, Math.PI * 2); g.fill();
+      goreTeeth(g, -mw + 8, 72 - mh + 5, mw - 8, 72 - mh + 5, 10, 20 + gape * 6, true);
+      goreTeeth(g, -mw + 10, 72 + mh - 5, mw - 10, 72 + mh - 5, 9, 17 + gape * 5, false);
+      // 입 안을 가로지르는 볼 살가닥 + 침
+      if (gape > 0.3) {
+        goreStrands(g, -mw * 0.6, 72 - mh * 0.5, mw * 0.6, 72 + mh * 0.5, 5, 'rgba(214,190,178,0.45)');
+        goreDrool(g, -mw * 0.4, 72 + mh - 8, 34 + gape * 44);
+        goreDrool(g, mw * 0.42, 72 + mh - 8, 28 + gape * 38);
+      }
+      // 목의 러프 칼라 — 화면 하단 프레임
+      for (let i = -3; i <= 3; i++) {
+        g.fillStyle = i % 2 ? '#b8ad94' : '#d8cfba';
+        g.beginPath(); g.ellipse(i * 44, 206, 32, 24, 0, Math.PI, Math.PI * 2); g.fill();
+      }
     } else if (kind === 'shade') {
-      // 꺼진 것: 잿빛 석상 얼굴이 빛을 머금고 쩍쩍 갈라진다
-      goreSkin(g, 0, 0, 150, 170, '#74737e', '#3e3d47', '#141319');
-      // 표면을 가르는 균열들 — 안에서 빛이 샌다
+      // 꺼진 것: 잿빛 석상 — 균열마다 차가운 빛이 차오르고, 얼굴이 부서지며 빛이 쏟아진다
+      goreSkin(g, 0, 0, 150, 170, '#7b7a86', '#45444f', '#17161c');
+      // 정으로 쪼은 자국
+      g.strokeStyle = 'rgba(20,19,26,0.5)';
+      for (let i = 0; i < 40; i++) {
+        const a = Math.random() * Math.PI * 2, r = Math.random() * 140;
+        const x = Math.cos(a) * r, y = Math.sin(a) * r * 1.12;
+        g.lineWidth = 1 + Math.random();
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + jit(7), y + jit(5)); g.stroke();
+      }
       g.save();
       g.beginPath(); g.ellipse(0, 0, 150, 170, 0, 0, Math.PI * 2); g.clip();
+      // 균열 — 어두운 골 + 심지에서 새는 빛 + 실금
       for (let i = 0; i < 9; i++) {
         const a0 = (i / 9) * Math.PI * 2 + jit(0.3);
-        let x = jit(28), y = jit(28);
-        g.strokeStyle = `rgba(245,248,230,${0.22 + 0.5 * gape})`;
-        g.lineWidth = 1 + gape * 3;
-        g.shadowColor = '#fff'; g.shadowBlur = 8 + gape * 22;
-        g.beginPath(); g.moveTo(x, y);
-        for (let s = 0; s < 5; s++) { x += Math.cos(a0) * 34 + jit(14); y += Math.sin(a0) * 34 + jit(14); g.lineTo(x, y); }
+        let x = jit(26), y = jit(26);
+        const pts = [[x, y]];
+        for (let s = 0; s < 5; s++) { x += Math.cos(a0) * 34 + jit(13); y += Math.sin(a0) * 34 + jit(13); pts.push([x, y]); }
+        g.strokeStyle = 'rgba(8,8,12,0.85)'; g.lineWidth = 4 + gape * 3; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+        for (const p of pts) g.lineTo(p[0], p[1]);
         g.stroke();
+        g.strokeStyle = `rgba(240,246,228,${0.25 + 0.6 * gape})`;
+        g.lineWidth = 1.2 + gape * 2.4;
+        g.shadowColor = '#eef4e2'; g.shadowBlur = 10 + gape * 26;
+        g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+        for (const p of pts) g.lineTo(p[0], p[1]);
+        g.stroke();
+        g.shadowBlur = 0;
+        g.strokeStyle = 'rgba(16,15,20,0.5)'; g.lineWidth = 1;
+        for (let s = 1; s < pts.length; s += 2) {
+          g.beginPath(); g.moveTo(pts[s][0], pts[s][1]);
+          g.lineTo(pts[s][0] + jit(22), pts[s][1] + jit(18)); g.stroke();
+        }
+      }
+      // 떨어져 나가 떠오르는 돌 조각 (빛나는 단면)
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 + i;
+        const fl = gape * (18 + (i % 4) * 14);
+        const x = Math.cos(a) * (96 + (i % 3) * 22), y = Math.sin(a) * (110 + (i % 3) * 24) - fl;
+        g.fillStyle = '#55545f';
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + 7 + (i % 3) * 3, y + 3); g.lineTo(x + 3, y + 9); g.closePath(); g.fill();
+        g.strokeStyle = `rgba(240,246,228,${0.3 + 0.4 * gape})`; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + 7 + (i % 3) * 3, y + 3); g.stroke();
       }
       g.restore();
-      // 텅 빈 눈구멍 — 안에서 창백한 빛이 새어 나온다
+      // 텅 빈 눈구멍 — 빛의 우물 + 부챗살 광선
       const sdrop = gape * 70;
       for (const ex of [-54, 54]) {
-        g.fillStyle = 'rgba(0,0,0,0.7)'; g.beginPath(); g.ellipse(ex, -34, 34, 46, 0, 0, Math.PI * 2); g.fill();
-        g.save(); g.shadowColor = '#e8ecd8'; g.shadowBlur = 24 + gape * 30;
-        const eg = g.createRadialGradient(ex, -34, 2, ex, -34, 26 + sdrop * 0.3);
-        eg.addColorStop(0, `rgba(232,236,216,${0.6 + 0.4 * gape})`); eg.addColorStop(1, 'rgba(120,124,110,0)');
-        g.fillStyle = eg; g.beginPath(); g.ellipse(ex, -34, 16, 24, 0, 0, Math.PI * 2); g.fill();
+        g.fillStyle = 'rgba(0,0,0,0.75)'; g.beginPath(); g.ellipse(ex, -36, 34, 46, 0, 0, Math.PI * 2); g.fill();
+        g.save(); g.translate(ex, -36);
+        for (let r2 = 0; r2 < 3; r2++) {
+          const ra = -0.5 + r2 * 0.5 + Math.sin(t * 3 + r2) * 0.08;
+          g.save(); g.rotate(ra);
+          const lg = g.createLinearGradient(0, 0, 0, 120);
+          lg.addColorStop(0, `rgba(238,244,226,${0.14 + gape * 0.2})`); lg.addColorStop(1, 'rgba(238,244,226,0)');
+          g.fillStyle = lg;
+          g.beginPath(); g.moveTo(-4, 0); g.lineTo(4, 0); g.lineTo(16, 120); g.lineTo(-16, 120); g.closePath(); g.fill();
+          g.restore();
+        }
+        g.restore();
+        g.save(); g.shadowColor = '#e8ecd8'; g.shadowBlur = 26 + gape * 30;
+        const eg = g.createRadialGradient(ex, -36, 3, ex, -36, 30 + sdrop * 0.3);
+        eg.addColorStop(0, '#ffffff');
+        eg.addColorStop(0.45, `rgba(240,246,228,${0.75 + 0.25 * gape})`);
+        eg.addColorStop(1, 'rgba(130,134,120,0)');
+        g.fillStyle = eg; g.beginPath(); g.ellipse(ex, -36, 21, 30, 0, 0, Math.PI * 2); g.fill();
         g.restore();
       }
-      // 세로로 쩍 갈라지는 입 — 안에서 빛이 쏟아진다
-      const smh = 30 + gape * 96, smw = 18 + gape * 30;
-      g.fillStyle = '#050507'; g.beginPath(); g.ellipse(0, 62, smw, smh, 0, 0, Math.PI * 2); g.fill();
-      g.save(); g.shadowColor = '#fff'; g.shadowBlur = 10 + gape * 26;
+      // 입 — 세로로 부서져 벌어지는 틈 (깨진 단면의 지그재그)
+      const smh = 32 + gape * 96, smw = 18 + gape * 32;
+      g.fillStyle = '#060608';
+      g.beginPath();
+      g.moveTo(0, 62 - smh);
+      for (let s = 1; s <= 6; s++) g.lineTo((s % 2 ? smw : smw * 0.7) + jit(3), 62 - smh + (smh * 2 * s) / 6);
+      for (let s = 5; s >= 0; s--) g.lineTo(-(s % 2 ? smw : smw * 0.72) + jit(3), 62 - smh + (smh * 2 * s) / 6);
+      g.closePath(); g.fill();
+      // 안에서 쏟아지는 빛
+      g.save(); g.shadowColor = '#fff'; g.shadowBlur = 12 + gape * 30;
       const smg = g.createRadialGradient(0, 62, 3, 0, 62, smh);
-      smg.addColorStop(0, `rgba(245,248,232,${0.5 + 0.5 * gape})`); smg.addColorStop(0.7, 'rgba(150,150,140,0.18)'); smg.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = smg; g.beginPath(); g.ellipse(0, 62, smw * 0.7, smh * 0.85, 0, 0, Math.PI * 2); g.fill();
+      smg.addColorStop(0, '#ffffff');
+      smg.addColorStop(0.4, `rgba(246,250,236,${0.7 + 0.3 * gape})`);
+      smg.addColorStop(0.75, 'rgba(160,162,150,0.2)');
+      smg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = smg; g.beginPath(); g.ellipse(0, 62, smw * 0.66, smh * 0.85, 0, 0, Math.PI * 2); g.fill();
       g.restore();
-      // 깨진 돌 이빨
-      goreTeeth(g, -smw, 62 - smh + 8, smw, 62 - smh + 8, 6, 12 + gape * 10, true);
-      goreTeeth(g, -smw, 62 + smh - 8, smw, 62 + smh - 8, 6, 12 + gape * 10, false);
+      // 부서진 돌 이빨
+      goreTeeth(g, -smw, 62 - smh + 9, smw, 62 - smh + 9, 6, 13 + gape * 10, true, STONE_TEETH);
+      goreTeeth(g, -smw, 62 + smh - 9, smw, 62 + smh - 9, 6, 13 + gape * 10, false, STONE_TEETH);
+      // 떠오르는 빛 먼지
+      for (let i = 0; i < 14; i++) {
+        const px = Math.sin(i * 3.7) * 130, py = ((i * 53 + 400 - t * 60) % 380) - 190;
+        g.fillStyle = `rgba(238,244,226,${0.12 + 0.3 * gape * BK.hash2(i, 0, 1)})`;
+        g.fillRect(px, py, 2 + (i % 2), 2 + (i % 2));
+      }
     } else {
-      // 미소 짓는 것: 검은 연기 머리 + 충혈된 빛나는 눈 + 찢어지는 거대 미소
-      goreSkin(g, 0, 0, 150, 168, '#1c1626', '#0c0814', '#020108');
-      g.fillStyle = 'rgba(10,8,16,0.7)';
-      for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2; g.beginPath(); g.arc(Math.cos(a) * 150, Math.sin(a) * 165, 28 + Math.random() * 24, 0, Math.PI * 2); g.fill(); }
+      // 미소 짓는 것: 심연의 연기 — 수축하는 동공, 잇몸까지 드러나는 거대한 미소
+      goreSkin(g, 0, 0, 150, 168, '#201a2c', '#0d0916', '#020107');
+      // 살아 있는 연기 가장자리 (t로 흐른다)
+      g.fillStyle = 'rgba(12,9,20,0.75)';
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2 + t * 0.7;
+        g.beginPath(); g.arc(Math.cos(a) * 148, Math.sin(a) * 164, 24 + ((i * 7) % 3) * 9 + Math.sin(t * 5 + i) * 5, 0, Math.PI * 2); g.fill();
+      }
+      // 연기 소용돌이 결
+      g.strokeStyle = 'rgba(56,44,84,0.28)'; g.lineWidth = 2;
+      for (let i = 0; i < 7; i++) {
+        g.beginPath(); g.arc(jit(60), jit(70), 40 + i * 16, t * 0.4 + i, t * 0.4 + i + 1.8); g.stroke();
+      }
       const drop = gape * 92;
       for (const ex of [-56, 56]) {
-        // 안와 그림자
-        g.fillStyle = 'rgba(0,0,0,0.6)'; g.beginPath(); g.ellipse(ex, -38, 38, 50, 0, 0, Math.PI * 2); g.fill();
+        // 안와 — 눌린 연기 주름
+        g.fillStyle = 'rgba(0,0,0,0.65)'; g.beginPath(); g.ellipse(ex, -38, 40, 52, 0, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = 'rgba(70,58,96,0.5)'; g.lineWidth = 2;
+        for (let s = 0; s < 4; s++) { g.beginPath(); g.arc(ex, -38, 44 + s * 5, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); }
         // 빛나는 흰 눈알
-        g.save(); g.shadowColor = '#fff'; g.shadowBlur = 28;
+        g.save(); g.shadowColor = '#fff'; g.shadowBlur = 30;
         const eg = g.createRadialGradient(ex - 6, -46, 3, ex, -40, 36 + drop * 0.4);
-        eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.7, '#f0ead0'); eg.addColorStop(1, '#c8c0a0');
+        eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.65, '#f0ead0'); eg.addColorStop(1, '#bcb494');
         g.fillStyle = eg; g.beginPath(); g.ellipse(ex, -40, 30, 40 + drop * 0.4, 0, 0, Math.PI * 2); g.fill();
         g.restore();
         // 핏발
-        goreVeins(g, ex, -40, 26, 'rgba(180,30,30,0.55)', 6);
-        // 홍채 + 동공
-        g.fillStyle = '#3a1c0a'; g.beginPath(); g.arc(ex + jit(2), -30, 14, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#040106'; g.beginPath(); g.arc(ex, -30, 7, 0, Math.PI * 2); g.fill();
-        g.fillStyle = 'rgba(255,255,255,0.9)'; g.beginPath(); g.arc(ex - 4, -34, 2.5, 0, Math.PI * 2); g.fill();
-        // 흘러내리는 검은 액
-        g.fillStyle = 'rgba(8,6,12,0.85)'; g.fillRect(ex - 5, -8, 10, drop);
+        goreVeins(g, ex, -40, 28, 'rgba(180,30,30,0.6)', 7);
+        // 홍채 + 동공 — 벌어질수록 동공이 수축한다 (초점이 너에게 맺힌다)
+        g.fillStyle = '#3a1c0a'; g.beginPath(); g.arc(ex + jit(1.5), -30, 13, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#040106'; g.beginPath(); g.arc(ex, -30, 8 - gape * 4.5, 0, Math.PI * 2); g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.9)'; g.beginPath(); g.arc(ex - 4, -34, 2.4, 0, Math.PI * 2); g.fill();
+        // 흘러내리는 검은 진액
+        g.fillStyle = 'rgba(6,4,10,0.85)';
+        g.fillRect(ex - 5, -8, 10, drop);
+        g.beginPath(); g.arc(ex, -8 + drop, 6, 0, Math.PI); g.fill();
       }
-      // 거대한 미소 (찢어짐)
-      g.strokeStyle = '#fdf8e0'; g.lineWidth = 26; g.lineCap = 'round';
-      const open = 0.12 - gape * 0.06, end = 0.88 + gape * 0.08, rad = 92 + gape * 42;
+      // 거대한 미소 — 흰 띠가 벌어지며 잇몸과 이빨이 드러난다
+      const open = 0.12 - gape * 0.06, end = 0.88 + gape * 0.08, rad = 92 + gape * 44;
+      g.save(); g.shadowColor = '#fdf8e0'; g.shadowBlur = 18;
+      g.strokeStyle = '#fdf8e0'; g.lineWidth = 26 - gape * 10; g.lineCap = 'round';
       g.beginPath(); g.arc(0, 28, rad, Math.PI * open, Math.PI * end); g.stroke();
-      if (gape > 0.25) {
-        const ig = g.createRadialGradient(0, 56, 4, 0, 56, rad * 0.8);
-        ig.addColorStop(0, '#1a0204'); ig.addColorStop(1, '#3a0608');
-        g.fillStyle = ig; g.beginPath(); g.ellipse(0, 56, rad * 0.82, 22 + gape * 52, 0, 0, Math.PI * 2); g.fill();
-        goreTeeth(g, -rad * 0.7, 40, rad * 0.7, 40, 11, 20 + gape * 16, true);
-        if (gape > 0.55) for (let i = 0; i < 4; i++) goreDrool(g, jit(rad * 0.6), 62, 30 + Math.random() * 50);
+      g.restore();
+      if (gape > 0.2) {
+        const ig = g.createRadialGradient(0, 56, 4, 0, 56, rad * 0.85);
+        ig.addColorStop(0, '#0e0102'); ig.addColorStop(1, '#3a0608');
+        g.fillStyle = ig; g.beginPath(); g.ellipse(0, 58, rad * 0.84, 20 + gape * 58, 0, 0, Math.PI * 2); g.fill();
+        // 잇몸 띠
+        g.fillStyle = '#5e1c1e';
+        g.beginPath(); g.ellipse(0, 58 - (16 + gape * 46), rad * 0.8, 10, 0, 0, Math.PI, true); g.fill();
+        goreTeeth(g, -rad * 0.72, 42 - gape * 8, rad * 0.72, 42 - gape * 8, 12, 20 + gape * 16, true);
+        goreTeeth(g, -rad * 0.6, 58 + (16 + gape * 48), rad * 0.6, 58 + (16 + gape * 48), 10, 14 + gape * 10, false);
+        // 입꼬리에서 당겨지는 살가닥
+        goreStrands(g, -rad * 0.7, 30, rad * 0.7, 58 + gape * 40, 4, 'rgba(190,170,150,0.35)');
+        if (gape > 0.55) for (let i = 0; i < 4; i++) goreDrool(g, jit(rad * 0.55), 66 + gape * 30, 30 + Math.random() * 50);
       }
     }
   }
 
   function drawBlood(prog) {
     const g = dctx;
-    g.fillStyle = '#7a0608';
+    const th = JS_THEME[game.jumpMon] || JS_THEME.smiler;
+    if (game.jumpMon === 'shade') {
+      // 꺼진 것: 피 대신 균열에서 터져 나온 빛 — 부드러운 광구가 위로 샌다
+      for (const b of game.jumpBlood) {
+        if (prog < b.delay) continue;
+        const lp = BK.clamp((prog - b.delay) / 0.4, 0, 1);
+        const r = b.r * 0.8 * lp;
+        if (r < 1) continue;
+        const lg = g.createRadialGradient(b.x, b.y, 0.5, b.x, b.y, r);
+        lg.addColorStop(0, `rgba(250,252,240,${0.7 * lp})`);
+        lg.addColorStop(0.5, `rgba(210,218,190,${0.28 * lp})`);
+        lg.addColorStop(1, 'rgba(210,218,190,0)');
+        g.fillStyle = lg;
+        g.beginPath(); g.arc(b.x, b.y, r, 0, Math.PI * 2); g.fill();
+        // 위로 새어 오르는 가는 빛줄기
+        g.fillStyle = `rgba(240,244,226,${0.3 * lp})`;
+        g.fillRect(b.x - 1, b.y - b.drip * lp, 2, b.drip * lp);
+      }
+      return;
+    }
+    g.fillStyle = th.blood;
     for (const b of game.jumpBlood) {
       if (prog < b.delay) continue;
       const lp = BK.clamp((prog - b.delay) / 0.4, 0, 1);
@@ -3063,9 +3388,9 @@
       // 흘러내림
       g.fillRect(b.x - r * 0.3, b.y, r * 0.6, b.drip * lp);
       // 밝은 하이라이트
-      g.fillStyle = '#a01010';
+      g.fillStyle = th.bloodHi;
       g.beginPath(); g.arc(b.x - r * 0.25, b.y - r * 0.25, r * 0.4, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#7a0608';
+      g.fillStyle = th.blood;
     }
     g.globalAlpha = 1;
   }

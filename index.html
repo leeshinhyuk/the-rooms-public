@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>the rooms</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 @font-face {
   font-family: 'Galmuri11';
@@ -53,6 +53,7 @@ html, body {
   text-shadow: 0 0 18px rgba(232, 218, 143, 0.5), 0 0 50px rgba(232, 218, 143, 0.18);
 }
 .t-keys { font-size: 12px; color: #6e6440; margin-top: 18px; line-height: 1.8; }
+.mobile-keys { display: none; }
 .t-credit { font-size: 11px; color: #4e492f; margin-top: 12px; letter-spacing: 2px; }
 button {
   font-family: inherit;
@@ -174,19 +175,229 @@ button.ghost {
   font-size: 12px; color: #5a5436; letter-spacing: 2px;
   animation: flicker 3s infinite;
 }
+
+/* ---- 모바일 터치 조작 ---- */
+#mobile-controls {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+#overlay:not(.hidden) + #mobile-controls {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.touch-dpad {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-areas: ". up ." "left . right" ". down .";
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 52px);
+  gap: 3px;
+  pointer-events: none;
+}
+.touch-actions {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(3, 54px);
+  grid-template-rows: repeat(2, 54px);
+  gap: 8px;
+  align-items: center;
+  justify-items: center;
+  pointer-events: none;
+}
+.touch-utility {
+  position: absolute;
+  top: max(9px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+#mobile-controls .touch-button {
+  width: 50px;
+  height: 50px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(232, 218, 143, 0.62);
+  border-radius: 50%;
+  background: rgba(15, 14, 8, 0.58);
+  color: #f0dfa0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 0 14px rgba(216, 204, 138, 0.08);
+  text-shadow: 0 1px 3px #000;
+  letter-spacing: 0;
+  line-height: 1;
+  touch-action: none;
+  pointer-events: auto;
+  opacity: 0.78;
+}
+#mobile-controls .touch-button:hover {
+  background: rgba(15, 14, 8, 0.58);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 0 14px rgba(216, 204, 138, 0.08);
+  animation: none;
+}
+#mobile-controls .touch-button.pressed {
+  opacity: 1;
+  color: #fff2b6;
+  background: rgba(92, 78, 28, 0.82);
+  border-color: #fff0a6;
+  box-shadow: 0 0 18px rgba(255, 232, 145, 0.34), inset 0 0 12px rgba(255, 241, 176, 0.18);
+  transform: scale(0.94);
+}
+#mobile-controls .touch-button b {
+  display: block;
+  font-size: 17px;
+  font-weight: normal;
+  line-height: 17px;
+}
+#mobile-controls .touch-button span {
+  display: block;
+  margin-top: 3px;
+  font-size: 8px;
+  line-height: 9px;
+  letter-spacing: 0;
+}
+#mobile-controls .touch-dir {
+  width: 52px;
+  height: 52px;
+  font-size: 24px;
+}
+.touch-up { grid-area: up; }
+.touch-left { grid-area: left; }
+.touch-right { grid-area: right; }
+.touch-down { grid-area: down; }
+#mobile-controls .touch-interact {
+  width: 58px;
+  height: 58px;
+  border-color: rgba(255, 235, 151, 0.88);
+  background: rgba(65, 56, 20, 0.72);
+}
+#mobile-controls .touch-small {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+  background: rgba(10, 10, 7, 0.62);
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  html, body {
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    overflow: hidden;
+    align-items: flex-start;
+    touch-action: none;
+  }
+  #wrap {
+    width: 100vw;
+    height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #screen {
+    width: 100vw;
+    max-width: 960px;
+    height: auto;
+    max-height: 100dvh;
+    object-fit: contain;
+    cursor: default;
+  }
+  #overlay {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+  .box, .news, .note-box, .cut-mono {
+    max-width: min(92vw, 620px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .box { padding: 20px 18px; }
+  .t-pre { font-size: 11px; letter-spacing: 4px; }
+  .t-main { font-size: 43px; letter-spacing: 3px; }
+  .desktop-keys { display: none; }
+  .mobile-keys { display: block; }
+  .t-keys { margin-top: 13px; font-size: 10px; line-height: 1.75; }
+  .end-title { font-size: 29px; letter-spacing: 2px; }
+  .end-story { font-size: 13px; line-height: 1.75; }
+  .end-stats { font-size: 11px; line-height: 1.75; }
+  .news { padding: 20px 20px 24px; }
+  .news-head { font-size: 20px; }
+  .news-body { font-size: 12px; line-height: 1.75; }
+  .note-box { padding: 22px 22px 18px; }
+  .note-body { font-size: 14px; line-height: 1.8; }
+  .cut-mono { font-size: 16px; line-height: 1.85; padding: 16px; }
+  .skip-hint { bottom: max(10px, env(safe-area-inset-bottom)); right: 14px; font-size: 10px; }
+  #mobile-controls { display: block; }
+}
+
+@media (pointer: coarse) and (orientation: landscape), (max-width: 760px) and (orientation: landscape) {
+  #wrap { align-items: center; }
+  #screen {
+    width: min(100vw, calc(100dvh * 1.5385));
+    height: min(100dvh, calc(100vw / 1.5385));
+  }
+  .touch-dpad {
+    grid-template-columns: repeat(3, 47px);
+    grid-template-rows: repeat(3, 47px);
+  }
+  #mobile-controls .touch-dir { width: 47px; height: 47px; }
+  .touch-actions {
+    grid-template-columns: repeat(3, 49px);
+    grid-template-rows: repeat(2, 49px);
+    gap: 6px;
+  }
+  #mobile-controls .touch-button { width: 46px; height: 46px; }
+  #mobile-controls .touch-interact { width: 52px; height: 52px; }
+  #mobile-controls .touch-small { width: 34px; height: 34px; }
+}
 </style>
 </head>
 <body>
 <div id="wrap">
   <canvas id="screen" width="960" height="624"></canvas>
   <div id="overlay" class="hidden"></div>
+  <div id="mobile-controls" aria-label="모바일 게임 조작">
+    <div class="touch-utility">
+      <button type="button" class="touch-button touch-small" data-touch-key="m" aria-label="음소거">M</button>
+      <button type="button" class="touch-button touch-small" data-touch-key="escape" aria-label="일시정지">II</button>
+    </div>
+    <div class="touch-dpad" aria-label="이동 방향">
+      <button type="button" class="touch-button touch-dir touch-up" data-touch-key="w" aria-label="위로 이동">↑</button>
+      <button type="button" class="touch-button touch-dir touch-left" data-touch-key="a" aria-label="왼쪽으로 이동">←</button>
+      <button type="button" class="touch-button touch-dir touch-right" data-touch-key="d" aria-label="오른쪽으로 이동">→</button>
+      <button type="button" class="touch-button touch-dir touch-down" data-touch-key="s" aria-label="아래로 이동">↓</button>
+    </div>
+    <div class="touch-actions" aria-label="게임 행동">
+      <button type="button" class="touch-button" data-touch-key="shift" aria-label="달리기"><b>R</b><span>달리기</span></button>
+      <button type="button" class="touch-button" data-touch-key="q" aria-label="돌 던지기"><b>Q</b><span>돌</span></button>
+      <button type="button" class="touch-button touch-interact" data-touch-key="e" aria-label="상호작용"><b>E</b><span>행동</span></button>
+      <button type="button" class="touch-button" data-touch-key="h" aria-label="아몬드 워터 마시기"><b>H</b><span>마시기</span></button>
+      <button type="button" class="touch-button" data-touch-key="g" aria-label="아몬드 워터 던지기"><b>G</b><span>던지기</span></button>
+    </div>
+  </div>
 </div>
-<script src="js/util.js?v=27"></script>
-<script src="js/assets.js?v=27"></script>
-<script src="js/audio.js?v=27"></script>
-<script src="js/map.js?v=27"></script>
-<script src="js/actors.js?v=27"></script>
-<script src="js/fx.js?v=27"></script>
-<script src="js/main.js?v=27"></script>
+<script src="js/util.js?v=29"></script>
+<script src="js/assets.js?v=29"></script>
+<script src="js/audio.js?v=29"></script>
+<script src="js/map.js?v=29"></script>
+<script src="js/actors.js?v=29"></script>
+<script src="js/fx.js?v=29"></script>
+<script src="js/main.js?v=29"></script>
 </body>
 </html>
