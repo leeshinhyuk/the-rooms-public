@@ -290,6 +290,41 @@ button.ghost {
   font-size: 13px;
   background: rgba(10, 10, 7, 0.62);
 }
+#orientation-gate {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 3, 1, 0.96);
+  color: #d8cc8a;
+  line-height: 1.6;
+  text-align: center;
+  pointer-events: auto;
+}
+.orientation-mark {
+  width: 82px;
+  height: 46px;
+  margin: 0 auto 22px;
+  border: 2px solid #8a7f4e;
+  border-radius: 7px;
+  box-shadow: 0 0 22px rgba(216, 204, 138, 0.16), inset 0 0 18px rgba(216, 204, 138, 0.08);
+  position: relative;
+}
+.orientation-mark::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  right: 5px;
+  top: 19px;
+  border-radius: 50%;
+  background: #d8cc8a;
+}
+.orientation-title { font-size: 20px; letter-spacing: 2px; }
+.orientation-copy { margin-top: 8px; color: #6e6440; font-size: 11px; letter-spacing: 1px; }
 
 @media (pointer: coarse), (max-width: 760px) {
   html, body {
@@ -366,6 +401,11 @@ button.ghost {
   #mobile-controls .touch-interact { width: 52px; height: 52px; }
   #mobile-controls .touch-small { width: 34px; height: 34px; }
 }
+
+@media (pointer: coarse) and (orientation: portrait), (max-width: 760px) and (orientation: portrait) {
+  #mobile-controls { display: none; }
+  #orientation-gate { display: flex; }
+}
 </style>
 </head>
 <body>
@@ -391,13 +431,20 @@ button.ghost {
       <button type="button" class="touch-button" data-touch-key="g" aria-label="아몬드 워터 던지기"><b>G</b><span>던지기</span></button>
     </div>
   </div>
+  <div id="orientation-gate" role="status" aria-live="polite" aria-hidden="true">
+    <div>
+      <div class="orientation-mark" aria-hidden="true"></div>
+      <div class="orientation-title">기기를 가로로 돌려주세요</div>
+      <div class="orientation-copy">가로 화면에서 플레이할 수 있습니다.</div>
+    </div>
+  </div>
 </div>
-<script src="js/util.js?v=29"></script>
-<script src="js/assets.js?v=29"></script>
-<script src="js/audio.js?v=29"></script>
-<script src="js/map.js?v=29"></script>
-<script src="js/actors.js?v=29"></script>
-<script src="js/fx.js?v=29"></script>
-<script src="js/main.js?v=29"></script>
+<script src="js/util.js?v=30"></script>
+<script src="js/assets.js?v=30"></script>
+<script src="js/audio.js?v=30"></script>
+<script src="js/map.js?v=30"></script>
+<script src="js/actors.js?v=30"></script>
+<script src="js/fx.js?v=30"></script>
+<script src="js/main.js?v=30"></script>
 </body>
 </html>

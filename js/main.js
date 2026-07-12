@@ -259,6 +259,7 @@
   // ---------------- 게임 상태 ----------------
   const game = BK.game = {
     state: 'title', // title | play | note | pause | cut | jumpscare | dead | win
+    orientationBlocked: false,
     zoneIdx: 0,
     world: null, player: null, monsters: [],
     spawnPos: { x: 0, y: 0 },
@@ -337,12 +338,29 @@
   addEventListener('blur', releaseAllTouches);
   document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAllTouches(); });
 
+  const orientationGate = document.getElementById('orientation-gate');
+  const portraitQuery = matchMedia('(orientation: portrait)');
+  function syncOrientationGate() {
+    const blocked = touchMode && portraitQuery.matches;
+    game.orientationBlocked = blocked;
+    orientationGate.setAttribute('aria-hidden', blocked ? 'false' : 'true');
+    if (blocked) {
+      releaseAllTouches();
+      BK.audio.setDread(0); BK.audio.setChase(0, 0); BK.audio.setTension(0); BK.audio.setCrisis(0);
+    }
+  }
+  if (portraitQuery.addEventListener) portraitQuery.addEventListener('change', syncOrientationGate);
+  else portraitQuery.addListener(syncOrientationGate);
+  addEventListener('resize', syncOrientationGate);
+  syncOrientationGate();
+
   // 인트로: 화면 클릭으로도 넘기기
   overlay.addEventListener('click', (e) => {
     if (game.state === 'intro' && !e.target.closest('button')) advanceIntro();
   });
 
   function handleKey(k) {
+    if (game.orientationBlocked) return;
     if (k === 'm' && BK.audio.started) {
       toast(BK.audio.toggleMute() ? '음소거' : '음소거 해제');
     }
@@ -1489,6 +1507,7 @@
 
   // ---------------- 업데이트 ----------------
   function update(dt) {
+    if (game.orientationBlocked) return;
     game.time += dt;
     BK.fx.flashA *= Math.exp(-3.4 * dt);
     if (game.flickerT > 0) game.flickerT -= dt;
